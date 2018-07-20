@@ -34,9 +34,9 @@ def laser(msg):
 						   bytesize=serial.EIGHTBITS,
 						   timeout=0.1) as ser:
 			ser.write((msg + '\r\n').encode(encoding='ascii'))
-			response = [line.decode(encoding='ascii') for line in ser.readlines()]
+			response = [line.decode(encoding='ascii').rstrip() for line in ser.readlines()]
 			
-			if response[-1] == 'OK\r\n': return(['00', response[0]])
+			if response[-1] == 'OK': return(['00', response[0]])
 			else: return(['33', response[-1]])
 
 	except serial.SerialException as e:
