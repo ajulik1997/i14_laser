@@ -1,20 +1,40 @@
-## A simple python file that demonstrates how to communicate with the server
+###############################################################################
+###                                                                         ###
+###     Written by Alexander Liptak (GitHub: @ajulik1997)                   ###
+###     Date: Summmer 2018                                                  ###
+###     E-Mail: Alexander.Liptak.2015@live.rhul.ac.uk                       ###
+###     Phone: +44 7901 595107                                              ###
+###                                                                         ###
+###############################################################################
+
+## A simple python file that demonstrates how to communicate with server.py
+
+##### IMPORTS #################################################################
 
 import socket
 
-host = socket.gethostname()
+##### HOST AND PORT SETUP #####################################################
+
+host = socket.gethostname()     ## CHANGE THIS TO IP OR HOSTNAME OF SERVER
 port = 14000
 
-try:
-	clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	clientsocket.connect((host, port))
-except Exception as e:
-	print(e)
-	clientsocket.close()
-	clientsocket = socket.socket()
-	clientsocket.connect((host, port))
+##### ATTEMPT TO CONNECT TO SERVER ############################################
+
+try:    ## create client socket and bind to server
+    clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientsocket.connect((host, port))
+except Exception as e:  ## socket may be left open from a crashed session
+    print(e)
+    clientsocket.close()    ## close socket and recreate it
+    clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientsocket.connect((host, port))  ## attempt to connect again
+
+##### INFINITE LOOP FOR SENDING AND RECEIVING MESSAGES ########################
 
 while True:
-	mssg = input('SEND MESSAGE TO SERVER: ')
-	clientsocket.send((mssg+'\r\n').encode())
-	print('RECEIVED MESSAGE:', clientsocket.recv(1024).decode('ascii'))
+    msg = input('SEND MESSAGE TO SERVER: ')
+    if msg == 'exit':
+        clientsocket.close()
+    else:
+        clientsocket.send((mssg+'\r\n').encode())
+        print('RECEIVED MESSAGE:', clientsocket.recv(1024).decode('ascii'))
