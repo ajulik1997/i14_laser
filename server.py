@@ -15,6 +15,7 @@ import atexit                           ## gracefully close at exit
 from datetime import datetime           ## UTC time for logging purposes
 from threading import Thread            ## for threaded server
 from externalParser import parse        ## EXTERNAL RULEBOOK
+from errors import errno				## EXTERNAL ERROR DICTIONARY
 
 ##### LOGGING AND RECOVERY DETECTION ##########################################
 
@@ -57,13 +58,13 @@ def handleResponse(data):
         Resulting string from parsed and executed arguments
         Error codes (see local file errors.txt)
     '''
-    if len(data) <= 2: return b'10\r\n'
-    if len(data) >= 128: return b'11\r\n'
-    if data[-2:] != '\r\n': return b'12\r\n'
+    if len(data) <= 2: return errno('10')
+    if len(data) >= 128: return errno('11')
+    if data[-2:] != '\r\n': return errno('12')
     
     words = [word for word in data[:-2].split(' ') if len(word) != 0]
-    if len(words) == 0: return b'13\r\n'
-    if len(words) >= 8: return b'14\r\n'
+    if len(words) == 0: return errno('13')
+    if len(words) >= 8: return errno('14')
     
     return parse(words)
 
