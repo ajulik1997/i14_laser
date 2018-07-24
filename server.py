@@ -15,7 +15,7 @@ import atexit                           ## gracefully close at exit
 from datetime import datetime           ## UTC time for logging purposes
 from threading import Thread            ## for threaded server
 from externalParser import parse        ## EXTERNAL RULEBOOK
-from errors import errno				## EXTERNAL ERROR DICTIONARY
+from errors import errno                ## EXTERNAL ERROR DICTIONARY
 
 ##### LOGGING AND RECOVERY DETECTION ##########################################
 

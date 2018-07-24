@@ -36,5 +36,5 @@ while True:
     if msg == 'exit':
         clientsocket.close()
     else:
-        clientsocket.send((msg+'\r\n').encode())
+        clientsocket.send((msg+'\r\n').encode('ascii'))
         print('RECEIVED MESSAGE:', clientsocket.recv(1024).decode('ascii'))

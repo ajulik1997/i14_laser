@@ -9,9 +9,9 @@
 
 ##### IMPORTS #################################################################
 
-import RPi.GPIO as GPIO         ## for GPIO control
-from BioRay import laser        ## serial control of laser
-from errors import errno		## EXTERNAL ERROR DICTIONARY
+import RPi.GPIO as GPIO                 ## for GPIO control
+from BioRay import laser                ## serial control of laser
+from errors import errno, warn_parse    ## EXTERNAL ERROR DICTIONARY
 
 ##### GLOBAL VARS #############################################################
 
@@ -49,9 +49,9 @@ if GPIO.input(4) == 0 and GPIO.input(17) == 0: laser("SOUR:AM:STAT OFF")
 def interlock_check():
     '''Returns interlock and override status'''
     
-	if GPIO.input(4) == 1: return 'L00'	    ## interlock closed
-	if GPIO.input(17) == 1: return 'L09'    ## interlock open, override on
-	return '90'                            ## interlock open, override off
+    if GPIO.input(4) == 1: return 'L00'     ## interlock closed
+    if GPIO.input(17) == 1: return 'L09'    ## interlock open, override on
+    return '90'                            ## interlock open, override off
 
 ##### ARGUMENT CHECKS #########################################################
 
@@ -81,27 +81,27 @@ def laser_mains_CMD(args):
     
     a_check = argument_check(args, [['ON', 'OFF']])
     i_check = interlock_check()
-	warn_list = []
+    warn_list = []
 
-	if a_check != '00': return errno(a_check[1:])	## arguments are not good
-	if i_check == '90': return errno(i_check[1:])	## ilock open, override off
-    if i_check == '09': warn_list.append('09')		## append override warning if on
-	
-	## add warning and do nothing if laser is already on/off
-	if args[0].upper() == laser("SOUR:AM:STAT?")[-1]: warn_list.append('01')
-	else:	## time to switch on/off laser, and see if it worked
-		result = laser("SOUR:AM:STAT "+args[0].upper())
-		if result[0] != '00': return result.join(' ')	## laser did not switch on OK
-	
-	if len(warn_list) == 0: return errno('00')	## no warnings, return OK
-	if len(warn_list) == 1: return errno(warn_list[0])	## return a warning
-	return warn_list.join(' ')	## return all the warnings formatted nicely
+    if a_check != '00': return errno(a_check)   ## arguments are not good
+    if i_check == '90': return errno(i_check)   ## ilock open, override off
+    if i_check == '09': warn_list.append('09')      ## append override warning if on
+    
+    ## add warning and do nothing if laser is already on/off
+    if args[0].upper() == laser("SOUR:AM:STAT?")[-1]: warn_list.append('01')
+    else:   ## time to switch on/off laser, and see if it worked
+        result = laser("SOUR:AM:STAT "+args[0].upper())
+        if result[0] != '00': return (' '.join(result)+'/r/n')   ## laser did not switch on OK
+    
+    if len(warn_list) == 0: return errno('00')  ## no warnings, return OK
+    if len(warn_list) == 1: return errno(warn_list[0])  ## return a warning
+    return ' '.join(warn_list)  ## return all the warnings formatted nicely
 
 #######################################
     
 def laser_mains_QUERY():
     '''Queries whether laser is ON or OFF'''
-	
+    
     return laser("SOUR:AM:STAT?")[-1]
 
 #######################################
@@ -224,4 +224,4 @@ def parse(args):
         '?INTERLOCK_STATUS'   : interlock_status_QUERY(),
         '?INTERLOCK_OVERRIDE' : interlock_override_QUERY()
     }
-    return (str(rulebook.get(args[0], '20'))+'\r\n').encode(encoding='ascii')
+    return rulebook.get(args[0], errno('20'))

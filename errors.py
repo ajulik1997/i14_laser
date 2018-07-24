@@ -50,3 +50,8 @@ def errno(num):
     }
     
     return errors.get(num, b'?? : An unknown error code was returned\r\n')
+
+def warn_parse(list):
+    if len(list) == 0: return errno('00')
+    if len(list) == 1: return errno(list[0])
+    return (' '.join(list)+'\r\n').encode('ascii')
