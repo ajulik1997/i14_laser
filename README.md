@@ -2,7 +2,7 @@
 
 Software developed for the remote control and monitoring of a laser at the [Diamond Light Source I14 instrument](https://www.diamond.ac.uk/Instruments/Imaging-and-Microscopy/I14.html).
 
-The modular design of the code as well as the following documentation is designed as a guide to simply the processes of installing the software, using it for its intended purpose, extending its functionality, or applying it to other components or instruments.
+The following documentation is designed as a guide to simplify the processes of preparing the hardware and installing this software, as well as extending its functionality and applying it to other components or instruments.
 
 ## Table of Contents
 
@@ -27,13 +27,33 @@ The modular design of the code as well as the following documentation is designe
   
 ## Introduction
 
-At the core of this "system" lies a [Raspberry Pi](https://www.raspberrypi.org/), used as a smart networked microcontroller running a python script which enables it to process text-based commands. A laser (or in theory, any other device that needs to be controlled) is connected to the Raspberry Pi via a USB-to-Serial interface. Other interfaces, such as I<sup>2</sup>C As the GPIO pins on the Pi are exclusively digital, a Digital-to-Analog converter tied to the Pi I<sup>2</sup>C-over-GPIO interface is also used to provide any necessary <CONTINUE FROM HERE>
+At the core of this "system" lies a [Raspberry Pi](https://www.raspberrypi.org/), used as a server running a python script which allows it to process text-based commands that it receives over network. A [Coherent Laser](https://www.coherent.com/) is connected to the Raspberry Pi via a USB-to-Serial interface, enabling the Pi to send commands to the laser and monitor its status. An [Arduino board](https://www.arduino.cc/) is also connected to the Raspberry Pi via a USB-to-Serial as well as a GPIO interface, and is mainly responsible for realtime generation of waveforms that are used to modulate the laser via a Digital-to-Analog converter. Additionally, a camera can also be connected to the Arduino, which is able to synchronise the camera's shutter with the modulation of the laser.
 
 ## The Hardware
 
+The following section decuments the steps required to correctly set up the hardware. It describes the setup of the operating system on the Raspberry Pi, as well as the required wiring between the Raspberry Pi, Arduino, DAC, laser and camera.
+
 ### Raspberry Pi
 
+The Raspberry Pi used in this project is the [Raspberry Pi 3 B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/) (upgraded from the Raspberry Pi B Rev 2.0 on which developement took place), chosen due to the following features:
+  - 1.4GHz processor (upgraded from 700Mhz)
+  - 1GB SDRAM (upgraded from 512MB)
+  - 40 GPIO pins (upgraded from 26)
+  - Gigabit Ethernet
+  - MicroSD port
+  - PoE support
+  
+According to our specification, the Raspberry Pi needs to be set up so that it can do the following:
+  - run a headless Linux OS
+  - communicate over SSH
+  - run code written in Python
+  - <INSERT MORE ITEMS HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>
+
 #### Operating System
+
+The operating system chosen for this project was [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/), an OS based on Debian Stretch with no desktop interface, chosen for its minimal footprint and high compatibility with Raspberry Pi. The required image was downloaded from the [official mirror](https://downloads.raspberrypi.org/raspbian_lite_latest), and written to a 16GB microSD card according to the [installation instructions](https://www.raspberrypi.org/documentation/installation/installing-images/README.md).
+
+As the Pi is being used a server, it needs to be set up to run headless. This process is described in detail [here](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md), but the most important step (activating SSH), can be acomplished by mounting the SD card on any Windows or 
 
 #### Pin Assignment
 
