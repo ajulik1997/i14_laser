@@ -1,0 +1,30 @@
+|--------- 00 : SUCCESS ----------------------------------------|
+| 00 - Completed without errors									|
+|--------- 0X : WARNINGS ---------------------------------------|
+| 01 - Command has no effect									|
+| 09 - Safety interlock override is on							|
+|--------- 1X : MESSAGE ERRORS ---------------------------------|
+| 10 - Received message is too short or contains no data		|
+| 11 - Received message is too long and cannot be parsed		|
+| 12 - Received message is not terminated correctly				|
+| 13 - Received message contains no commands					|
+| 14 - Received message contains too many arguments				|
+|--------- 2X : PARSING ERRORS ---------------------------------|
+| 20 - Command not recognized									|
+| 21 - Not enough arguments provided for this command			|
+| 22 - Too may arguments provided for this command				|
+| 23 - One or more provided argument(s) not recognized			|
+| 24 - One or more provided argument(s) are not of expected type|
+| 25 - One or more provided argument(s) are not in range		|
+|--------- 3X : TTY PORT ERRORS --------------------------------|
+| 30 - Unexpected TTY port error								|
+| 31 - Unable to connect to specified TTY port					|
+| 32 - A timeout occurred when reading from TTY port			|
+| 33 - Laser returned an error while executing command			|
+| 34 - Arduino returned an unexpected response					|
+| 35 - Unable to edit TTY settings for Arduino compatibility	|
+|--------- 4X : I2C ERRORS -------------------------------------|
+| 40 - Unable to connect to I2C device							|
+|--------- 9X : SAFETY ERRORS ----------------------------------|
+| 90 - Safety interlock is open									|
+|---------------------------------------------------------------|

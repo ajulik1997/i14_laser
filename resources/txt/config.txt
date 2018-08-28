@@ -1,0 +1,109 @@
+|---------------------------------------------------------------------------------------------------------------------------------------------------|
+|  Command				| Arguments				|    Returns								| Description											|
+|-----------------------|-----------------------|-------------------------------------------|-------------------------------------------------------|
+|  LASER_MAINS			| <ON|OFF>				| XX LASER_MAINS <ON|OFF>					| (sets power state of laser)							|
+| ?LASER_MAINS			|						| 	 LASER_MAINS <ON|OFF>					| (gets power state of laser)							|
+|						|						|											|														|
+|  LASER_POWER			| <percentage>			| XX LASER_POWER <percentage>				| (sets laser beam power as a percentage)				|
+| ?LASER_POWER			|						| 	 LASER_POWER <percentage>				| (gets laser beam power as a percentage)				|
+|						|						|											|														|
+| ?LASER_STATUS			|						|	 LASER_STATUS <int>						| (gets status number of laser)							|
+| ?LASER_FAULT			|						|	 LASER_FAULT <int>						| (gets error number of laser)							|
+|						|						|											|														|
+|  LASER_MODE			| <mode>				| XX LASER_MODE <mode>						| (sets laser operation mode)							|
+| ?LASER_MODE			|						|	 LASER_MODE <mode>						|														|
+|						|						|											|	mode:<gated|master|indep>							|
+|						|						|											|		gated: laser synchronized with camera shutter	|
+|						|						|											|		master: camera synchronizes with laser			|
+|						|						|											|		free: laser running independently of camera		|
+|						|						|											|														|
+|  LASER_MOD_POLARITY	| <pass|invert>			| XX MOD_LASER_POLARITY <pass|invert>		| (sets modulation polarity of laser)					|
+| ?LASER_MOD_POLARITY	|						|	 MOD_LASER_POLARITY <pass|invert>		| (gets modulation polarity of laser)					|
+|						|						|											|														|
+|  LASER_MODULATION		| <mode> <freq> <duty>	| XX LASER_MODULATION <mode> <freq> <duty>	| (sets laser modulation mode, frequency, and duty)		|
+| ?LASER_MODULATION		|						|	 LASER_MODULATION <mode> <freq> <duty>	| (gets laser modulation mode, frequency, and duty)		|
+|-----------------------|-----------------------|-------------------------------------------|-------------------------------------------------------|
+| ?POWER_NOW			|						| 	 POWER_NOW <watts>						| (gets operating power of laser in Watts)				|
+| ?POWER_MAX			|						| 	 POWER_MAX <watts>						| (gets maximum power of laser in Watts)				|
+| ?POWER_NOM			|						| 	 POWER_NOM <watts>						| (gets nominal power of laser in Watts)				|
+|						|						|											|														|
+| ?AMPS_NOW				|						|	 CURRENT_NOW <amps>						| (gets operating current of laser in Amps)				|
+|						|						|											|														|
+| ?TEMP_INTERNAL_NOW	|						|	 TEMP_INTERNAL_NOW	<Celsius>			| (gets internal laser temperature in Celsius)			|
+| ?TEMP_DIODE_NOW		|						|	 TEMP_DIODE_NOW <Celsius>				| (gets laser diode temperature in Celsius)				|
+| ?TEMP_DIODE_MAX		|						|	 TEMP_DIODE_MAX <Celsius>				| (gets lower limit of laser diode temperature)			|
+| ?TEMP_DIODE_MIN		|						|	 TEMP_DIODE_MIN <Celsius>				| (gets upper limit of laser diode temperature)			|
+|-----------------------|-----------------------|-------------------------------------------|-------------------------------------------------------|
+| ?INFO_LASER			|						|	 INFO_LASER	<str>						| (gets all laser identification and misc. info)		|
+| ?INFO_SERVER			|						|	 INFO_SERVER <str>						| (gets server version number and identification info)	|
+|-----------------------|-----------------------|-------------------------------------------|-------------------------------------------------------|
+| ?INTERLOCK_STATUS		|						|    INTERLOCK_STATUS <open|closed>			| (gets status of safety interlock)						|
+| ?INTERLOCK_OVERRIDE	|						|	 INTERLOCK_OVERRIDE <on|off>			| (gets status of interlock override switch)			|
+|-----------------------|-----------------------|-------------------------------------------|-------------------------------------------------------|
+|  STRICT_MODE			| <ON|OFF>				| XX STRICT_MODE <ON|OFF>					| (sets status of strict mode)							|
+| ?STRICT_MODE			|						|    STRICT_MODE <ON|OFF>					| (gets status of strict mode)							|
+|---------------------------------------------------------------------------------------------------------------------------------------------------|
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+|---------------------------------------------------------------------------------------------------------------------------|
+| Command	| Arguments				| Returns							| Description										|
+|  MAINP *	|	<on|off>			| MAINP <on|off> <ok|err>			| (sets power state of laser)						| #####
+| ?MAINP *	|						| MAINP <on|off>					| (gets power state of laser)						| # C #
+| ?CRRNT	|						| CRRNT <str>						| (gets operating current of laser in Amps)			| # O #
+| ?POWER	|						| POWER <str>						| (gets operating power of laser in Watts)			| #	M #
+| ?DTEMP	|						| DTEMP <str>						| (gets laser diode temperature in Celsius)			| # M #
+| ?ITEMP	|						| ITEMP <str>						| (gets internal laser temperature in Celsius)		| # O #
+| ?ERROR	|						| ERROR <str>						| (gets error status of laser)						| #	N #
+| ?STATN	|						| STATN <str>						| (gets status number of laser)						| #####
+|-----------|-----------------------|-----------------------------------|---------------------------------------------------|
+| ?DIODE	|						| DIODE <h.hh>						| (gets diode usage in hours)						| #####
+| ?MAXPW	|						| MAXPW <str>						| (gets maximum laser power in Watts)				| #   #
+| ?NOMPW	|						| NOMPW <str>						| (gets nominal power of laser in Watts)			| # I #
+| ?WAVEL	|						| WAVEL <str>						| (gets wavelength of laser in nanometers)			| # N #
+| ?MDPOL	|						| MDPOL <pass|inverted>				| (gets modulation polarity of laser)				| # F #
+| ?OPMOD	|						| OPMOD <str>						| (gets operating mode of laser)					| # O #
+| ?DTMPL	|						| DTMPL <str>						| (gets lower limit of laser diode temperature)		| #   #
+| ?DTMPU	|						| DTMPU <str>						| (gets upper limit of laser diode temperature)		| #####
+|-----------|-----------------------|-----------------------------------|---------------------------------------------------|
+|  USRID	|	<str>				| USRID <str> <ok|err>				| (sets user defined ID of laser)					| #####
+| ?USRID	|						| USRID <str>						| (gets user defined ID of laser)					| #   #
+| ?IDENT	|						| IDENT <str>						| (gets ID of laser)								| # M #
+| ?CALIB	|						| CALIB <yyyymmdd>					| (gets calibration date of laser)					| # I #
+| ?FIRMW	|						| FIRMW <str>						| (gets firmware version of laser)					| # S #
+| ?MANUF	|						| MAUNF <yyyyddmm>					| (gets manufacture date of laser)					| # C #
+| ?MODEL	|						| MODEL <str>						| (gets model of laser)								| #   #
+| ?PARTN	|						| PARTN <str>						| (gets part number of laser)						| #####
+|-----------|-----------------------|-----------------------------------|---------------------------------------------------|
+| ?ILOCK *	|						| ILOCK <open|closed>				| (gets status of safety interlock)					|
+| ?OVRRD *	|						| OVRRD <on|off>					| (gets status of interlock override switch)		|
+|-----------|-----------------------|-----------------------------------|---------------------------------------------------|
+|  AMPLT *	| <percentage>			| AMPLT <percentage> <ok|err>		| (sets laser amplitude as a percentage)			| #####
+| ?AMPLT *	| 						| AMPLT <percentage>				| (gets laser amplitude as a percentage)			| # M #
+|  SETMD *	| <gated|master|indep>	| SETMD <gated|master|indep>		| (sets laser operation mode):						| # O #
+|			|						|									|	gated: laser synchronized with camera shutter	| # D #
+|			|						|									|		   note: ignores any modulation settings	| # U #
+|			|						|									|	master: camera synchronizes with laser			| # L #
+|			|						|									|	indep: laser running independently of camera	| # A #
+|  MODUL *	| <mode> <kHz> <duty>	| MODUL <mode> <kHz> <ok|err>		| (sets laser modulation mode and frequency)		| # T #
+|			|						|									|   mode: <none|sine|square|triangle|sawtooth|full>	| # I #
+|			|						|									|	kHz: frequency range between ?kHz and ?kHz		| # O #
+|			|						|									|	duty: duty cycle of waveform as a percentage	| # N #
+| ?MODUL *	| 						| MODUL <mode> <kHz> <duty>			| (gets laser modulation mode and frequency)		| #####
+|---------------------------------------------------------------------------------------------------------------------------|
