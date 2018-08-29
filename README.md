@@ -7,13 +7,18 @@ The following documentation is designed as a guide to simplify the processes of 
 ## Table of Contents
 
 - [Introduction](#introduction)
+  - [Key Features](#key-features)
 - [The Hardware](#the-hardware)
   - [Raspberry Pi](#raspberry-pi)
     - [Operating System](#operating-system)
+    - [Drivers and Packages](#drivers-and-packages)
     - [Pin Assignment](#pin-assignment)
     - [Python](#python)
   - [Laser](#laser)
+  - [Arduino](#arduino)
+    - [Pin Assignment](#pin-assignment)
   - [Digital to Analog Converter](#digital-to-analog-converter)
+    - [Laser modulation](#laser-modulation)
 - [The Software](#the-software)
   - [Server](#server)
     - [Client](#client)
@@ -21,6 +26,9 @@ The following documentation is designed as a guide to simplify the processes of 
     - [Table of Recognised Commands](#table-of-recognised-commands)
   - [Error Handler](#error-handler)
     - [Table of Errors and Warnings](#table-of-errors-and-warnings)
+  - [Laser Serial Communication Script](#laser-serial-communication-script)
+  - [Arduino Controller Script (Python)](#arduino-controller-script-python)
+    - [Arduino Controller Script (C for AVR)](#arduino-controller-script-c-for-avr)
 - [Licensing](#licensing)
 - [Author](#author)
 - [Acknowledgements](#acknowledgements)
@@ -28,6 +36,8 @@ The following documentation is designed as a guide to simplify the processes of 
 ## Introduction
 
 At the core of this "system" lies a [Raspberry Pi](https://www.raspberrypi.org/), used as a server running a python script which allows it to process text-based commands that it receives over network. A [Coherent Laser](https://www.coherent.com/) is connected to the Raspberry Pi via a USB-to-Serial interface, enabling the Pi to send commands to the laser and monitor its status. An [Arduino board](https://www.arduino.cc/) is also connected to the Raspberry Pi via a USB-to-Serial as well as a GPIO interface, and is mainly responsible for realtime generation of waveforms that are used to modulate the laser via a Digital-to-Analog converter. Additionally, a camera can also be connected to the Arduino, which is able to synchronise the camera's shutter with the modulation of the laser.
+
+### Key Features
 
 ## The Hardware
 
@@ -55,13 +65,37 @@ The operating system chosen for this project was [Raspbian Stretch Lite](https:/
 
 As the Pi is being used a server, it needs to be set up to run headless. This process is described in detail [here](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md), but the most important step (activating SSH), can be acomplished by mounting the SD card on any Windows or 
 
+#### Drivers and Packages
+
+<TALK ABOUT DRIVER> <avrdude>
+
 #### Pin Assignment
 
 #### Python
 
+<VERSION, PACKAGES>
+
 ### Laser
 
+<MODEL, DOCUMENTATION, CONTROLLER, USB-TO-SERIAL, ARDUINO???>
+
+### Arduino
+
+<MODEL, STORAGE, MEMORY>
+
+<MODES OF OPERATION, MODES OF MODULATION>
+
+#### Pin Assignment
+
+<LIST OF ASSIGNED PINS> <WIRING DIAGRAM>
+
 ### Digital to Analog Converter
+
+<SPECIFICATION> <DATA SHEET> <I2C>
+  
+#### Laser Modulation
+
+<Oscilloscope>
 
 ## The Software
 
@@ -76,6 +110,12 @@ As the Pi is being used a server, it needs to be set up to run headless. This pr
 ### Error handler
 
 #### Table of Errors and Warnings
+
+### Laser Serial Communication Script
+
+### Arduino Controller Script (Python)
+
+#### Arduino Controller Script (C for AVR)
 
 ## Licensing
 
