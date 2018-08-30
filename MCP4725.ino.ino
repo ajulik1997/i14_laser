@@ -572,6 +572,7 @@ void setup() {
   I2c.setSpeed(1); // Set to high-speed mode
   I2c.pullup(1);
   I2c.timeOut(10); // 10ms timeout
+  writeToDAC(0);   // Set DAC to known state ASAP
 
   // Wait until serial becomes available
   Serial.begin(9600);
