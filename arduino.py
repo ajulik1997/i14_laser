@@ -8,6 +8,7 @@
 ###############################################################################
 
 import RPi.GPIO as GPIO
+import subprocess
 import serial
 import time
 
@@ -21,67 +22,58 @@ GPIO.setup([23, 24], GPIO.OUT)          ## Operation mode switch signals
 
 ## RESET ARDUINO ##############################################################
 
-GPIO.output(7, GPIO.HIGH)
-time.sleep(0.1)
-GPIO.output(7, GPIO.LOW)
-
-GPIO.output([18, 27, 22], GPIO.LOW)
-GPIO.output([23, 24], GPIO.LOW)
-
-## FUNCTIONS ##################################################################
-
-def isReady():
-    '''
-    Functions that handshakes with the Arduino to test if it is ready to
-        receive commands.
+def reset():
+    '''RESETS ARDUINO TO KNOWN STATE AND PREPARES FOR COMMUNICATION'''
     
-    Arguments:
-        none
-    
-    Returns:
-        Error codes (see local file errors.txt)
-    '''
-
     try:
-        with serial.Serial(port = '/dev/ttyACM0',
+        subprocess.run("stty -F /dev/ttyACM0 -hupcl", shell=True, check=True)
+    except subprocess.CalledProcessError as e:
+        return (['35', str(e)])
+
+    GPIO.output(7, GPIO.HIGH)
+    time.sleep(0.1)
+    GPIO.output(7, GPIO.LOW)
+
+    GPIO.output([18, 27, 22], GPIO.LOW)
+    GPIO.output([23, 24], GPIO.LOW)
+
+## PRIVATE FUNCTIONS ##########################################################
+
+def sendSerial(string, path='/dev/ttyACM0'):
+    try:
+        with serial.Serial(port = path,
                            baudrate = 9600,
-                           timeout = 1) as ser:
-            ser.write(b'READY\r\n')
-            response = ser.readline().decode(encoding='ascii').rstrip()
-            if response == 'OK': return('00')
-            else: return('34')
+                           timeout = 5,
+                           dsrdtr = False) as ser:
+            ser.write((string + ' \r\n').encode(encoding='ascii'))
+            time.sleep(0.1)
+            #response = ser.readline()
+            while(True): print(ser.readline())
+            #if response == b'OK\r\n':
+            #    return('00')
+            #elif response == b'':
+            #    return('32')
+            #else: return(['34', str(response)])
     except serial.SerialException as e:
         return(['31', str(e)])
-    except serial.SerialTimeoutException as e:
-        return(['32', str(e)])
     except Exception as e:
         return(['30', str(e)])
 
+## PUBLIC FUNCTIONS ###########################################################
 
 def setLaserPower(pwr):
     '''
-    Sets power of laser via TTY port
+    Sets power of laser via Serial port
     
     Arguments:
-        pwr <float> - laser power as a percentage
+        pwr <float> [0.0 - 100.0] - laser power as a percentage
     
     Returns:
         Error codes (see local file errors.txt)
     '''
+    
+    return(sendSerial("A" + str(pwr)))
 
-    try:
-        with serial.Serial(port = '/dev/ttyACM0',
-                           baudrate = 9600,
-                           timeout = 1) as ser:
-            ser.write((pwr + '\r\n').encode(encoding='ascii'))
-            return('00')
-    except serial.SerialException as e:
-        return(['31', str(e)])
-    except serial.SerialTimeoutException as e:
-        return(['32', str(e)])
-    except Exception as e:
-        return(['30', str(e)])
-        
 
 def setOperationMode(mode):
     '''
@@ -101,21 +93,35 @@ def setOperationMode(mode):
     if mode == 'master': GPIO.output([23, 24], (GPIO.LOW,  GPIO.HIGH))
     if mode == 'indep':  GPIO.output([23, 24], (GPIO.HIGH, GPIO.HIGH))
 
-
-def setModulationMode(mode, freq, duty):
+    
+def setTriggerThreshold(pwr):
     '''
-    Sets modulation mode of laser via GPIO and TTY
+    Sets the percentage of power above which laser can trigger camera in "master" mode
+
+    Arguments:
+        pwr <float> [0.0 - 100.0] - laser power as a percentage
+
+    Returns:
+        Error codes (see local file errors.txt)
+    '''
+    
+    return(sendSerial("T" + str(pwr)))
+
+
+def setModulationMode(mode, period, delay):
+    '''
+    Sets modulation mode of laser via GPIO and Serial port
     
     Arguments:
         mode <str> - string describing modulation mode of laser
-            none: laser is modulated to produce no output
-            sine: laser is modulated to produce a sine wave of given frequency and duty
-            square: laser is modulated to produce a square wave of given frequency and duty
-            triangle: laser is modulated to produce a triangle wave of given frequency and duty
-            sawtooth: laser is modulated to produce a sawtooth wave of given frequency and duty
-            full: laser is modulated to produce constant output at set power
-        freq <int> - target frequency of selected modulation mode
-        duty <int> - percentage of frequency cycle that wave spends at nonzero power
+            none: laser is modulated to produce a constant output
+            sine: laser is modulated to produce a sine wave of given period
+            square: laser is modulated to produce a square wave of given period
+            triangle: laser is modulated to produce a triangle wave of given period
+            sawtooth: laser is modulated to produce a sawtooth wave of given period
+            pulse: laser repeatedly pulses for specified time (period) then waits (delay)
+        period <float> [0.0 - 3,600,000.0] - milliseconds of period of one cycle
+        delay <float> [0.0 - 3,600,000.0] - milliseconds of delay between cycles
     
     Returns:
         Error codes (see local file errors.txt)
@@ -126,17 +132,6 @@ def setModulationMode(mode, freq, duty):
     if mode == 'square':   GPIO.output([18, 27, 22], (GPIO.LOW,  GPIO.HIGH, GPIO.LOW))
     if mode == 'triangle': GPIO.output([18, 27, 22], (GPIO.LOW,  GPIO.HIGH, GPIO.HIGH))
     if mode == 'sawtooth': GPIO.output([18, 27, 22], (GPIO.HIGH, GPIO.LOW,  GPIO.LOW))
-    if mode == 'full':     GPIO.output([18, 27, 22], (GPIO.HIGH, GPIO.HIGH, GPIO.HIGH))
+    if mode == 'pulse':    GPIO.output([18, 27, 22], (GPIO.HIGH, GPIO.HIGH, GPIO.HIGH))
     
-    try:
-        with serial.Serial(port = '/dev/ttyACM0',
-                           baudrate = 9600,
-                           timeout = 1) as ser:
-            ser.write((freq + ' ' + duty + '\r\n').encode(encoding='ascii'))
-            return('00')
-    except serial.SerialException as e:
-        return(['31', str(e)])
-    except serial.SerialTimeoutException as e:
-        return(['32', str(e)])
-    except Exception as e:
-        return(['30', str(e)])
+    return(sendSerial("P" + str(period) + ' ' + "D" + str(delay)))
