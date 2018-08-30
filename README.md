@@ -17,6 +17,7 @@ The following documentation is designed as a guide to simplify the processes of 
   - [Laser](#laser)
   - [Arduino](#arduino)
     - [Pin Assignment](#pin-assignment)
+	- [LED Signalling](#led-signalling)
   - [Digital to Analog Converter](#digital-to-analog-converter)
     - [Laser modulation](#laser-modulation)
 - [The Software](#the-software)
@@ -35,9 +36,20 @@ The following documentation is designed as a guide to simplify the processes of 
   
 ## Introduction
 
-At the core of this "system" lies a [Raspberry Pi](https://www.raspberrypi.org/), used as a server running a python script which allows it to process text-based commands that it receives over network. A [Coherent Laser](https://www.coherent.com/) is connected to the Raspberry Pi via a USB-to-Serial interface, enabling the Pi to send commands to the laser and monitor its status. An [Arduino board](https://www.arduino.cc/) is also connected to the Raspberry Pi via a USB-to-Serial as well as a GPIO interface, and is mainly responsible for real-time generation of waveforms that are used to modulate the laser via a Digital-to-Analog converter. Additionally, a camera can also be connected to the Arduino, which is able to synchronize the camera's shutter with the modulation of the laser.
+At the core of this "system" lies a [Raspberry Pi](https://www.raspberrypi.org/), used as a server running a python script which allows it to process text-based commands that it receives over network. A [Coherent Laser](https://www.coherent.com/) is connected to the Raspberry Pi via a USB-to-Serial interface, enabling the Pi to send commands to the laser and monitor its status. An [Arduino board](https://www.arduino.cc/) is also connected to the Raspberry Pi via a USB-to-Serial as well as a GPIO interface, and is mainly responsible for real-time generation of waveforms that are used to modulate the laser via a Digital-to-Analog converter (DAC). Additionally, a camera can also be connected to the Arduino, which can synchronize the camera's shutter with the modulation of the laser.
 
 ### Key Features
+
+- Remote control of laser over LAN
+- Remote monitoring of laser and safety interlock status over LAN
+- High-precision control of laser output intensity
+- Modulation of laser beam with pre-set waveforms of customizable frequency:
+	- Sine Wave 	<CONTINUE HERE AFTER I KNOW ABSOLUTE LIMITS>
+- Synchronization of laser with connected camera:
+	- "gated mode" : laser is turned on only when camera is exposing
+	- "master mode" : camera exposure triggered when laser intensity reaches a customizable threshold
+- Robust and extensible error handling code
+- Modular, well-documented code for easy customization
 
 ## The Hardware
 
@@ -67,7 +79,7 @@ As the Pi is being used a server, it needs to be set up to run headless. This pr
 
 #### Drivers and Packages
 
-<TALK ABOUT DRIVER> <avrdude>
+<TALK ABOUT DRIVER> <avrdude> <USB TO SERIAL HACK FOR LASER?>
 
 #### Pin Assignment
 
@@ -77,7 +89,7 @@ As the Pi is being used a server, it needs to be set up to run headless. This pr
 
 ### Laser
 
-<MODEL, DOCUMENTATION, CONTROLLER, USB-TO-SERIAL, ARDUINO???>
+<MODEL, DOCUMENTATION, CONTROLLER, USB-TO-SERIAL, ARDUINO???> <USB TO SERIAL HACK FOR LASER?>
 
 ### Arduino
 
@@ -86,6 +98,8 @@ As the Pi is being used a server, it needs to be set up to run headless. This pr
 <MODES OF OPERATION, MODES OF MODULATION>
 
 #### Pin Assignment
+
+#### LED Signalling
 
 <LIST OF ASSIGNED PINS> <WIRING DIAGRAM>
 
@@ -96,6 +110,8 @@ As the Pi is being used a server, it needs to be set up to run headless. This pr
 #### Laser Modulation
 
 <Oscilloscope>
+
+Talk about physical and software maximums / minimums and why you should not cross them
 
 ## The Software
 
@@ -116,6 +132,8 @@ As the Pi is being used a server, it needs to be set up to run headless. This pr
 ### Arduino Controller Script (Python)
 
 #### Arduino Controller Script (C for AVR)
+
+talk about why I had to replace the Wire library
 
 ## Licensing
 
