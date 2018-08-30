@@ -1,34 +1,47 @@
-#include "Wire.h"
-#include "math.h"
+/******************************************************************************
+ **                                                                          **
+ **     Written by Alexander Liptak (GitHub: @ajulik1997)                    **
+ **     Date: Summer 2018                                                    **
+ **     E-Mail: Alexander.Liptak.2015@live.rhul.ac.uk                        **
+ **     Phone: +44 7901 595107                                               **
+ **                                                                          **
+ ******************************************************************************/
 
-////////////////////////////////////////
+/******************* MCP4725 DAC Controller for Arduino Uno *******************/
 
-// MODES OF MODULATION P[4,7,8]
-//  000: none [STARTS HERE]
-//  001: sine
-//  010: square
-//  011: triangle
-//  100: sawtooth
-//  111: pulse
+/***** MODES OF MODULATION ***** P[4,7,8] *****
+    000: none [DEFAULT]
+    001: sine
+    010: square
+    011: triangle
+    100: sawtooth
+    111: pulse
+ **********************************************
 
-// MODES OF OPERATION P[A0,A1]
-// 00: undefined
-// 10: gated (slave) - only works with mode 010
-// 01: master
-// 11: independant
+ ***** MODES OF OPERATION ***** P[A0,A1] ******
+   00: undefined
+   01: master
+   10: gated (NOTE: only works with mode 010)
+   11: independent [DEFAULT]
+ **********************************************/
 
-////////////////////////////////////////
+#include "I2C.h"    // instead of Wire library, as it times out instead of locks up when transmission fails
+#include "math.h"   // for computing sine, rounding, etc.
+
+/************************ Global variable declarations ************************/
 
 // MODULATION VARIABLES
 uint16_t power = 0;      // Power of laser: 0-4095
 uint32_t tot_micro = 0;  // MICROseconds that a full cycle should last
 uint32_t off_micro = 0;  // MICROseconds that should be spend low during cycle
+uint32_t pulse_len = 0;  // MICROseconds to pulse laser for
+uint32_t pulse_wait = 0; // MICROseconds to wait between pulses
 
-// PULSE MODE VARIABLES
-uint32_t pulse_len = 0;   // MICROseconds to pulse laser for
-uint32_t pulse_wait = 0;  // MICROseconds to wait between pulses
-
-////////////////////////////////////////
+// WAVE VARIABLES
+bool needs_calibrating = true;  // Wave needs calibrating
+float divisor = 1.0;            // How many steps per wave (more steps, nicer wave, lower frequency)
+float increment = 0.01;         // How much to increment the divisor (prevents calibration from taking too long)
+unsigned long timer = 0;        // Wave timer (how long did my wave take, compared to target time)
 
 // STATE VARIABLES
 bool interlock_open = true;     // State of gate
@@ -36,41 +49,227 @@ bool override_on = true;        // State of interlock
 bool periodic_warning = true;   // State of warning light / buzzer (blinking)
 bool constant_warning = true;   // State of warning light / buzzer (constant)
 char rgb_state = ' ';           // State of LED
-
-// WAVE VARIABLES
-bool needs_calibrating = true;  // Wave needs calibrating
-uint32_t divisor = 2;           // Divisor of wave
-unsigned long timer = 0;        // Wave timer
+uint8_t modeOfModulation = 0;   // Mode of modulation (none/sine/square/triangle/sawtooth/pulse)
+uint8_t modeOfOperation = 3;    // Mode of operation (gated/master/independent)
 
 // WARNING BEEP VARIALBES
 unsigned long warn_timer = 0;   // Warning timer (for measuring time between beeps)
 uint32_t warn_delay = 5e5;      // Warning delay (time to wait between beeps)
 
-////////////////////////////////////////
+/************************** Function predeclarations **************************/
 
-// Writes data to DAC
-// 0x64 - Address of DAC
-// 0x40 - Register of DAC
-// 16-bit int split into two 8-bit ints
+// MODULATION FUNCTIONS
+inline void none();
+inline void sine();
+inline void square();
+inline void triangle();
+inline void sawtooth();
+inline void pulse();
+
+// HELPER FUNCTIONS
+void writeToDAC(uint16_t);
+void setRGB(char);
+inline void calibrate();
+inline void trigger(uint16_t);
+inline void genericOff();
+
+// PERIODIC CHECK FUNCTIONS
+void check();
+inline void checkInterlock();
+inline void checkForSerial();
+inline void checkModulationMode();
+inline void checkOperationMode();
+
+/********* writeToDAC ****** writes data to DAC register (not EEPROM) *********/
 
 void writeToDAC(uint16_t val) {
-  Wire.beginTransmission(0x62);
-  Wire.write(0x40);
-  Wire.write(val / 16);
-  Wire.write((val % 16) << 4);
-  Wire.endTransmission();
+  uint8_t bytes[2] = {val / 16, (val % 16) << 4}; // 16-bit int -> 2x8-bit ints
+  I2c.write(0x62, 0x40, bytes, 2);    //0x62 - DAC Address, 0x40 - DAC Register
 }
 
-////////////////////////////////////////
+/******** setRGB ****** set RGB LED to colour represented by parameter ********/
 
-// CONSTANT OUTPUT MODE
-void none() {
-  delayMicroseconds(5);
+void setRGB(char colour) {
+  // override some colours on warnings
+  if (colour == 'K' || colour == 'B' || colour == 'M') {
+    if (periodic_warning) {
+      colour = 'O';
+    } else if (constant_warning) {
+      colour = 'R';
+    }
+  }
+
+  // if the same colour is already set, return from function, else set colour
+  if (rgb_state == colour) return;
+  rgb_state = colour;
+
+  // set LED colour as requested
+  switch (colour) {
+
+    // ALWAYS ACCESSIBLE COLOURS
+    case 'R': analogWrite(9, 64); analogWrite(10, 0); analogWrite(11, 0);  break; //RED     : INTERLOCK
+    case 'G': analogWrite(9, 0); analogWrite(10, 0); analogWrite(11, 64);  break; //GREEN   : SERIAL
+    case 'O': analogWrite(9, 64); analogWrite(10, 0); analogWrite(11, 8);  break; //ORANGE  : OVERRIDE
+
+    // ACCESSIBLE WHEN NO WARNING
+    case 'K': analogWrite(9, 0); analogWrite(10, 0); analogWrite(11, 0);   break; //KEY     : OFF
+    case 'B': analogWrite(9, 0); analogWrite(10, 64); analogWrite(11, 0);  break; //BLUE    : LASER
+    case 'M': analogWrite(9, 64); analogWrite(10, 64); analogWrite(11, 0); break; //MAGENTA : CALIB
+
+      // DISABLED COLOURS
+      //case 'W': analogWrite(9, 64); analogWrite(10, 64); analogWrite(11, 64); break;  //WHITE
+      //case 'Y': analogWrite(9, 64); analogWrite(10, 0); analogWrite(11, 64); break;   //YELLOW
+      //case 'C': analogWrite(9, 0); analogWrite(10, 64); analogWrite(11, 64); break;   //CYAN
+  }
+}
+
+/*** calibrate ** adjusts steps per period of wave for requested frequency  ***/
+// STILL NEED TO HAVE A LOOK AT THIS (percentage, fallback, idk idk, takes too long with low power? + comment on it!!) !!!!!!!!
+inline void calibrate() {
+  if ((micros() - timer) < (tot_micro)) {
+    divisor = divisor + increment;
+  } else {
+    needs_calibrating = !needs_calibrating;
+  }
+}
+
+/** trigger * if mode of operation is "master", signal pin in sync with wave **/
+
+inline void trigger(uint16_t val) {
+  if (val > power * 0.5) {    // replace 0.5 with a different number of function
+    digitalWrite(3, HIGH);    //  to change the trigger threshold
+    return;
+  }
+  digitalWrite(3, LOW);
+}
+
+/** genericOff *** generic function that switches off the DAC once if needed **/
+
+inline void genericOff() {
+  if (needs_calibrating) {       // resued bool to ensure this only happens once
+    writeToDAC(0);               // switch DAC off
+    needs_calibrating = false;
+  }
+  setRGB('K');                   // signal off, no longer lasing
+}
+
+/****** check ***** wrapper function for all checks that need to be done ******/
+
+void check() {
+  checkInterlock();
+  checkForSerial();
+  checkModulationMode();
+  checkOperationMode();
+}
+
+/****** checkInterlock ***** checks the status of interlock and override ******/
+
+inline void checkInterlock() {
+  // pin status to useful variables
+  interlock_open = not digitalRead(A3);
+  override_on =  digitalRead(A2);
+
+  // safety interlock is open, we need to find out if it is safe to continue
+  if (interlock_open) {
+
+    // override is on, we can continue but flash an orange warning light (and buzzer)
+    if (override_on) {
+
+      // if we came here from inerlock open and override not on, clear that
+      constant_warning = false;
+      // if time between waiting has elapsed toggle states
+      if (micros() - warn_timer > warn_delay) {
+        warn_timer = micros();
+        periodic_warning = !periodic_warning;
+        // LED orange and buzzer on for half a second
+        if (periodic_warning) {
+          analogWrite(6, 64);
+          warn_delay = 5e5;
+          setRGB('O');
+          // LED black and buzzer off for 5 seconds
+        } else {
+          analogWrite(6, 0);
+          warn_delay = 5e6;
+          setRGB('K');
+        }
+      }
+      return;
+    } else {
+      // interlock is open and override is not on, cut power and signal red (do this only once)
+      if (!constant_warning) {
+        constant_warning = true;
+        periodic_warning = false;
+        power = 0;
+        analogWrite(6, 64);
+        setRGB('R');
+      }
+      return;
+    }
+  } else {
+    // interlock is closed, we don't care about override, switch off all warnings (only once)
+    if (constant_warning || periodic_warning) {
+      constant_warning = false;
+      periodic_warning = false;
+      analogWrite(6, 0);
+      setRGB('K');
+    }
+    return;
+  }
+}
+
+/***** checkForSerial ***** checks for incoming serial data and parses it *****/
+
+inline void checkForSerial() {
+  // only do anything if data is waiting to be parsed
+  if (Serial.available() > 0) {
+    setRGB('G');                                    // we are busy with serial communication
+    String str = Serial.readString();               // get one line from Serial
+    uint8_t str_index = 0;                          // start from first character
+    while (str_index != str.indexOf("\r\n")) {      // if we have not reached the end
+      while (str.indexOf(" ", str_index) != -1) {   // if we have not reached the last space
+        float val = str.substring(str_index + 1, str.indexOf(" ", str_index)).toFloat();  // extract float
+        switch (str.charAt(str_index)) {            // first character signals what float means, sort accordingly
+          case 'A': power = round(4095 * (val / 100.0)); break;
+          case 'F': tot_micro = round((1.0 / val) * 1e6); increment = 100 * pow((pow(tot_micro / 1e6, -1)) + 1, -1); break;
+          case 'D': off_micro = round(tot_micro * (1.0 - (val / 100.0))); break;
+          case 'P': pulse_len = val * 1e6; break;
+          case 'W': pulse_wait = val * 1e6; break;
+        }
+        str_index = str.indexOf(" ", str_index) + 1; // continue to next space
+      }
+    }
+    Serial.println("OK");       // signal transmission successful
+    needs_calibrating = true;   // set calibration flag
+    divisor = 1.0;              // reset wave divisor
+    setRGB('K');                // LED off, transmission complete
+  }
+}
+
+/***** checkModulationMode ****** detects the mode of modulation of laser *****/
+
+inline void checkModulationMode() {
+  // gets mode of modulation as a number from combination of three pins
+  modeOfModulation = 4 * (uint8_t)(digitalRead(4)) +
+                     2 * (uint8_t)(digitalRead(7)) +
+                     1 * (uint8_t)(digitalRead(8));
+}
+
+/****** checkOperationMode ****** detects the mode of operation of laser ******/
+
+inline void checkOperationMode() {
+  // gets mode of operation as a number from combination of two pins
+  modeOfOperation = 2 * (uint8_t)(digitalRead(A0)) +
+                    1 * (uint8_t)(digitalRead(A1));
+}
+
+/*************************** MODE 000: No modulation **************************/
+
+inline void none() {
+  delayMicroseconds(16);    // necessary for Pi to settle pins before reading
   needs_calibrating = true; // not really calibration, but reusing variable
 
-  while (digitalRead(4) == LOW &&
-         digitalRead(7) == LOW &&
-         digitalRead(8) == LOW) {
+  // should stay in this loop until modulation mode is changed
+  while (modeOfModulation == 0) {
     check();
 
     // only change the DAC value if it needs to be changed
@@ -79,406 +278,259 @@ void none() {
       needs_calibrating = false;
     }
 
-    // update LED colour accordingly
-    if (power != 0) {
-      setRGB('B');
-    } else {
+    // if power is off, set LED to black
+    if (power == 0) {
       setRGB('K');
+      continue;
     }
+
+    // set LED to blue, we a lasing
+    setRGB('B');
   }
 }
 
-////////////////////////////////////////
+/*********************** MODE 001: Sine wave modulation ***********************/
 
-// SINE WAVE MODULATION
-void sine() {
-  delayMicroseconds(5);
-  needs_calibrating = true;
+inline void sine() {
+  delayMicroseconds(16);    // necessary for Pi to settle pins before reading
+  needs_calibrating = true; // wave will need to be calibrated on first start
+  divisor = 1.0;            // reset divisor, this will be calibrated later
 
-  while (digitalRead(4) == LOW &&
-         digitalRead(7) == LOW &&
-         digitalRead(8) == HIGH) {
+  // should stay in this loop until modulation mode is changed
+  while (modeOfModulation == 1) {
     check();
 
-    if (power != 0) { // no point generating a 0 amplitude wave
-      // ---------- NON-ZERO AMPLITUDE ----------
-
-      if (needs_calibrating) {
-        // ---------- CALIBRATION STAGE ----------
-        setRGB('M');
-        divisor = 2;
-
-        while (needs_calibrating) {
-          timer = micros();
-          // ----------
-          for (float x = -M_PI; x < M_PI; x += (2 * M_PI) / divisor) {
-            uint16_t val = round(((float)power / 2) * (cos(x) + 1));
-            writeToDAC(val);
-          }
-          delayMicroseconds(off_micro);
-          // ----------
-          if ((micros() - timer) < (tot_micro)) {
-            divisor = divisor + 1;
-          } else {
-            needs_calibrating = !needs_calibrating; break;
-          }
-        }
-        // ---------- CALIBRATION STAGE ----------
-      }
-
-      // ---------- OUTPUT STAGE ----------
-      setRGB('B');
-      for (float x = -M_PI; x < M_PI; x += (2 * M_PI) / divisor) {
-        uint16_t val = round(((float)power / 2) * (cos(x) + 1));
-        writeToDAC(val);
-      }
-      delayMicroseconds(off_micro);
-      // ---------- OUTPUT STAGE ----------
-
-      // ---------- NON-ZERO AMPLITUDE ----------
-    } else {  // if amplitude is zero, just set it once
-      // ---------- ZERO AMPLITUDE ----------
-      if (needs_calibrating) {
-        writeToDAC(power);
-        needs_calibrating = !needs_calibrating;
-      }
-      setRGB('K');
-      // ---------- ZERO AMPLITUDE ----------
+    // if power is zero, no point generating wave, set DAC to 0 once, LED off
+    if (power == 0) {
+      genericOff();
+      continue;
     }
+
+    // if wave needs calibrating, set LED to magenta, record start time
+    if (needs_calibrating) {
+      timer = micros();
+      setRGB('M');
+      // will need to call generic calibration function after wave is donw
+    }
+
+    // one full period of sine wave is generated here, number of steps decided by divisor
+    for (float x = -M_PI; x < M_PI; x += (2.0 * M_PI) / divisor) {
+      uint16_t val = round(((float)power / 2.0) * (cos(x) + 1.0));
+      writeToDAC(val);
+      if (modeOfOperation == 1) trigger(val);
+    }
+    delayMicroseconds(off_micro);
+
+    // call generic calibration function, if required previously
+    if (needs_calibrating) {
+      calibrate();
+      continue;
+    }
+
+    // if wave is calibrated, set LED to blue, we are lasing
+    setRGB('B');
   }
 }
 
-////////////////////////////////////////
+/********************** MODE 010: Square wave modulation **********************/
 
-void square() {
-  delayMicroseconds(5);
+inline void square() {
+  delayMicroseconds(16);    // necessary for Pi to settle pins before reading
+  needs_calibrating = true; // not a calibration, but reusing bool to save memory
+  bool on = false;          // whether the laser is currently on or off
 
-  bool on = false;
-  while (digitalRead(4) == LOW &&
-         digitalRead(7) == HIGH &&
-         digitalRead(8) == LOW) {
-
+  // should stay in this loop until modulation mode is changed
+  while (modeOfModulation == 2) {
     check();
-    if (power != 0) {
-      setRGB('B');
-      if (!on) {
-        timer = micros();
-        writeToDAC(power);
-        on = true;
-      } else {
-        if (micros() - timer > tot_micro - off_micro) {
-          writeToDAC(0);
-        }
-        if (micros() - timer > tot_micro) {
-          on = false;
-        }
-      }
-    } else {
-      setRGB('K');
-      writeToDAC(power);
+
+    // if power is zero, no point generating wave, set DAC to 0 once, LED off
+    if (power == 0) {
+      genericOff();
+      continue;
     }
-  }
-}
 
-////////////////////////////////////////
-
-void triangle() {
-  delayMicroseconds(5);
-  if (!needs_calibrating) {
-    needs_calibrating = true;
-  }
-  while (digitalRead(4) == LOW &&
-         digitalRead(7) == HIGH &&
-         digitalRead(8) == HIGH) {
-
-    check();
-    if (power != 0) { // no point generating a 0 amplitude wave
-
-      // CALIBRATION STAGE
-      if (needs_calibrating) {
-        setRGB('M');
-        divisor = 2;
-
-        // TEST RUNS
-        while (needs_calibrating) {
-          timer = micros();
-          // ----------
-          for (float x = -(float)power; x < power; x += (float)power / divisor) {
-            uint16_t val = round(-abs(x) + power);
-            writeToDAC(val);
-          }
-          delayMicroseconds(off_micro);
-          // ----------
-          if ((micros() - timer) < (tot_micro)) {
-            divisor++;
-          } else {
-            needs_calibrating = !needs_calibrating; break;
-          }
-        }
-      }
-
-      // CALIBRATED WAVE
-      setRGB('B');
-      for (float x = -(float)power; x < power; x += (float)power / divisor) {
-        uint16_t val = round(-abs(x) + power);
-        writeToDAC(val);
-      }
-      delayMicroseconds(off_micro);
-    } else {
-      setRGB('K');
-      writeToDAC(power);
-    }
-  }
-}
-
-void sawtooth() {
-  delayMicroseconds(5);
-  if (!needs_calibrating) {
-    needs_calibrating = true;
-  }
-  while (digitalRead(4) == HIGH &&
-         digitalRead(7) == LOW &&
-         digitalRead(8) == LOW) {
-
-    check();
-    if (power != 0) { // no point generating a 0 amplitude wave
-
-      // CALIBRATION STAGE
-      if (needs_calibrating) {
-        setRGB('M');
-        divisor = 2;
-
-        // TEST RUNS
-        while (needs_calibrating) {
-          timer = micros();
-          // ----------
-          for (float x = 0; x < power; x += (float)power / divisor) {
-            writeToDAC(x);
-          }
-          writeToDAC(0);
-          delayMicroseconds(off_micro);
-          // ----------
-          if ((micros() - timer) < (tot_micro)) {
-            divisor++;
-          } else {
-            needs_calibrating = !needs_calibrating; break;
-          }
-        }
-      }
-
-      // CALIBRATED WAVE
-      setRGB('B');
-      for (float x = 0; x < power; x += (float)power / divisor) {
-        writeToDAC(x);
-      }
-      writeToDAC(0);
-      delayMicroseconds(off_micro);
-    } else {
-      setRGB('K');
-      writeToDAC(power);
-    }
-  }
-}
-
-void pulse() {
-  delayMicroseconds(5);
-
-  bool pulsed = false;
-  while (digitalRead(4) == HIGH &&
-         digitalRead(7) == HIGH &&
-         digitalRead(8) == HIGH) {
-
-    check();
-
-    if (!pulsed) {
+    // power is nonzero, alternate between on and off (on phase)
+    if (!on && modeOfOperation != 2) {
       timer = micros();
       writeToDAC(power);
-      if (power != 0) {
-        setRGB('B');
-      }
-      pulsed = true;
-    } else {
-      if (micros() - timer > pulse_len) {
-        writeToDAC(0);
-        setRGB('K');
-      }
-      if (micros() - timer > pulse_len + pulse_wait) {
-        pulsed = false;
-      }
+      if (modeOfOperation == 1) trigger(power);
+      on = true;
+      needs_calibrating = true;
+      setRGB('B');
+      continue;
     }
-  }
-}
 
-void setRGB(char colour) {
-  // OVERRIDE COLOURS ON WARNINGS
-  if (colour == 'K' || colour == 'B' || colour == 'M') {
-    if (constant_warning) {
-      colour = 'R';
-    } else if (periodic_warning) {
-      colour = 'O';
+    // same as previous block but saves some overhead when triggering externally
+    if (modeOfOperation == 2 && digitalRead(2) == HIGH) {
+      writeToDAC(power);
+      needs_calibrating = true;
+      setRGB('B');
+      continue;
     }
-  }
-  
-  // DO NOTHING IF COLOUR IS ALREADY SET
-  if (rgb_state == colour) {
-    return;
-  }
-  rgb_state = colour;
 
-  // MAIN PART
-  switch (colour) {
-    // ALWAYS ACCESSIBLE COLOURS
-    case 'R': analogWrite(9, 64); analogWrite(10, 0); analogWrite(11, 0); Serial.println("SETTING RED!"); break;  //RED    : INTERLOCK
-    case 'G': analogWrite(9, 0); analogWrite(10, 0); analogWrite(11, 64); break;  //GREEN  : SERIAL
-    case 'O': analogWrite(9, 64); analogWrite(10, 0); analogWrite(11, 8); break;  //ORANGE : OVERRIDE
-
-    // ACCESSIBLE WHEN NO WARNING
-    case 'K': analogWrite(9, 0); analogWrite(10, 0); analogWrite(11, 0); Serial.println("SETTING BLACK!"); break;   //KEY     : OFF
-    case 'B': analogWrite(9, 0); analogWrite(10, 64); analogWrite(11, 0); break;  //BLUE    : LASER
-    case 'M': analogWrite(9, 64); analogWrite(10, 64); analogWrite(11, 0); break; //MAGENTA : CALIB
-
-
-      // DISABLED COLOURS
-      //case 'W': analogWrite(9, 64); analogWrite(10, 64); analogWrite(11, 64); break;  //WHITE
-      //case 'Y': analogWrite(9, 64); analogWrite(10, 0); analogWrite(11, 64); break;   //YELLOW
-      //case 'C': analogWrite(9, 0); analogWrite(10, 64); analogWrite(11, 64); break;   //CYAN
-  }
-  Serial.println(colour);
-  Serial.println(rgb_state);
-  Serial.println(periodic_warning);
-  Serial.println(constant_warning);
-}
-
-void checkInterlock() {
-  interlock_open = not digitalRead(A3);
-  override_on =  digitalRead(A2);
-
-  if (interlock_open) {
-    if (override_on) {
-      constant_warning = false;
-      Serial.println("Periodic warning CHECK!");
-      if (micros() - warn_timer > warn_delay) {
-        warn_timer = micros();
-        periodic_warning = !periodic_warning;
-        if (periodic_warning) {
-          analogWrite(6, 64);
-          warn_delay = 5e5;
-          setRGB('O');
-          Serial.println("Periodic warning on!");
-        } else {
-          analogWrite(6, 0);
-          warn_delay = 5e6;
-          setRGB('K');
-          Serial.println("Periodic warning off!");
-        }
-      }
-    } else {
-      if (!constant_warning) {
-        constant_warning = true;
-        periodic_warning = false;
-        needs_calibrating = true;
-        power = 0;
-        analogWrite(6, 64);
-        setRGB('R');
-        Serial.println("Constant warning!");
-      }
-    }
-  } else {
-    if (constant_warning || periodic_warning) {
-      constant_warning = false;
-      periodic_warning = false;
-      analogWrite(6, 0);
+    // (wait for off, switch off)
+    if ((micros() - timer > tot_micro - off_micro) && needs_calibrating) {
+      writeToDAC(0);
+      if (modeOfOperation == 1) trigger(0);
+      needs_calibrating = false;
       setRGB('K');
-      Serial.println("Warning off!");
+      continue;
+    }
+
+    // same as previous block but saves some overhead when triggering externally
+    if ((modeOfOperation == 2 && digitalRead(2) == LOW) && needs_calibrating) {
+      writeToDAC(0);
+      needs_calibrating = false;
+      setRGB('K');
+      continue;
+    }
+
+    // (off phase)
+    // this is ignored when camera is controlled externally
+    if ((micros() - timer > tot_micro) && modeOfOperation != 2) {
+      on = false;
     }
   }
-
-  //  // INTERLOCK IS OPEN
-  //  if (digitalRead(A3) == LOW) {
-  //
-  //    // INTERLOCK OVERRIDE IS ON
-  //    if (digitalRead(A2) == HIGH) {
-  //      if (gate_open) {
-  //        gate_open = false;
-  //        needs_calibrating = true;
-  //      }
-  //      if (micros() - warn_timer > warn_delay) {
-  //        warn_timer = micros();
-  //        warning = !warning;
-  //        if (warning) {
-  //          analogWrite(6, 64);
-  //          warn_delay = 5e5;
-  //          setRGB('O');
-  //          return;
-  //        } else {
-  //          analogWrite(6, 0);
-  //          warn_delay = 5e6;
-  //          setRGB('K');
-  //          return;
-  //        }
-  //      }
-  //    } else {// OVERRIDE NOT ON, INTERLOCK OPEN
-  //      Serial.println("OVERRIDE IS NOT ON!!!!!!");
-  //      if (!gate_open || warning) {
-  //        Serial.println("LETS KILL SOME LASERS!");
-  //        warning = false;
-  //        gate_open = true;
-  //        analogWrite(6, 64);
-  //        setRGB('R');
-  //        power = 0;
-  //        Serial.println("CALIBRATION FROM GATE");
-  //        needs_calibrating = true;
-  //        Serial.println("GATE IS OPEN!!!");
-  //      }
-  //      return;
-  //    }
-  //    //INTERLOCK CLOSED
-  //  } else {
-  //    if (warning || gate_open) {
-  //      warning = false;
-  //      gate_open = false;
-  //      analogWrite(6, 0);
-  //      setRGB('K');
-  //      Serial.println("EVERYTHING OKAY NOW");
-  //    }
-  //    return;
-  //  }
 }
 
-////////////////////////////////////////
+/********************* MODE 011: Triangle wave modulation *********************/
 
-void checkForSerial() {
-  if (Serial.available() > 0) {
-    setRGB('G');
-    String str = Serial.readString();
-    uint8_t str_index = 0;
-    while (str_index != str.indexOf("\r\n")) {
-      while (str.indexOf(" ", str_index) != -1) {
-        float val = str.substring(str_index + 1, str.indexOf(" ", str_index)).toFloat();
-        switch (str.charAt(str_index)) {
-          case 'A': power = round(4095 * (val / 100)); break;
-          case 'F': tot_micro = round((1 / val) * 1e6); break;
-          case 'D': off_micro = round(tot_micro * (1 - (val / 100))); break;
-          case 'P': pulse_len = val * 1e6; break;
-          case 'W': pulse_wait = val * 1e6; break;
-        }
-        str_index++;
-      }
+inline void triangle() {
+  delayMicroseconds(16);    // necessary for Pi to settle pins before reading
+  needs_calibrating = true; // wave will need to be calibrated on first start
+  divisor = 1.0;            // reset divisor, this will be calibrated later
+
+  while (modeOfModulation == 3) {
+    check();
+
+    // if power is zero, no point generating wave, set DAC to 0 once, LED off
+    if (power == 0) {
+      genericOff();
+      continue;
     }
-    Serial.println("OK");
-    needs_calibrating = true;
-    setRGB('K');
+
+    // if wave needs calibrating, set LED to magenta, record start time
+    if (needs_calibrating) {
+      timer = micros();
+      setRGB('M');
+      // will need to call generic calibration function after wave is donw
+    }
+
+    // one full period of sine wave is generated here, number of steps decided by divisor
+    for (float x = -(float)power; x < power; x += (float)power / divisor) {
+      uint16_t val = round(-abs(x) + power);
+      writeToDAC(val);
+      if (modeOfOperation == 1) trigger(val);
+    }
+    delayMicroseconds(off_micro);
+
+    // call generic calibration function, if required previously
+    if (needs_calibrating) {
+      calibrate();
+      continue;
+    }
+
+    // if wave is calibrated, set LED to blue, we are lasing
+    setRGB('B');
   }
 }
 
-////////////////////////////////////////
+/********************* MODE 100: Sawtooth wave modulation *********************/
 
-void check() {
-  checkInterlock();
-  checkForSerial();
+inline void sawtooth() {
+  delayMicroseconds(16);    // necessary for Pi to settle pins before reading
+  needs_calibrating = true; // wave will need to be calibrated on first start
+  divisor = 1.0;            // reset divisor, this will be calibrated later
+
+  while (modeOfModulation == 4) {
+    check();
+
+    // if wave needs calibrating, set LED to magenta, record start time
+    if (needs_calibrating) {
+      timer = micros();
+      setRGB('M');
+      // will need to call generic calibration function after wave is donw
+    }
+
+    // one full period of sine wave is generated here, number of steps decided by divisor
+    delayMicroseconds(off_micro);
+    for (float x = 0; x < power; x += (float)power / divisor) {
+      writeToDAC(x);
+      if (modeOfOperation == 1) trigger(x);
+    }
+
+    // call generic calibration function, if required previously
+    if (needs_calibrating) {
+      calibrate();
+      continue;
+    }
+
+    // if wave is calibrated, set LED to blue, we are lasing
+    setRGB('B');
+  }
 }
 
-////////////////////////////////////////
+/**************************** MODE 111: Pulse mode ****************************/
+
+// basically almost the same as square wave mode, with some very subtle changes
+inline void pulse() {
+  delayMicroseconds(16);        // necessary for Pi to settle pins before reading
+  needs_calibrating = true;     // not a calibration, but reusing bool to save memory
+  bool pulsed = false;          // whether the pulse has already occured
+
+  while (modeOfModulation == 7) {
+    check();
+    // if power is zero, no point generating wave, set DAC to 0 once, LED off
+    if (power == 0) {
+      genericOff();
+      continue;
+    }
+
+    // power is nonzero, alternate between on and off (on phase)
+    if (!pulsed && modeOfOperation != 2) {
+      timer = micros();
+      writeToDAC(power);
+      if (modeOfOperation == 1) trigger(power);
+      pulsed = true;
+      needs_calibrating = true;
+      setRGB('B');
+      continue;
+    }
+
+    // same as previous block but saves some overhead when triggering externally
+    if (modeOfOperation == 2 && digitalRead(2) == HIGH) {
+      writeToDAC(power);
+      needs_calibrating = true;
+      setRGB('B');
+      continue;
+    }
+
+    // (wait for off, switch off)
+    if ((micros() - timer > pulse_len) && needs_calibrating) {
+      writeToDAC(0);
+      if (modeOfOperation == 1) trigger(0);
+      needs_calibrating = false;
+      setRGB('K');
+      continue;
+    }
+
+    // same as previous block but saves some overhead when triggering externally
+    if ((modeOfOperation == 2 && digitalRead(2) == LOW) && needs_calibrating) {
+      writeToDAC(0);
+      needs_calibrating = false;
+      setRGB('K');
+      continue;
+    }
+
+    // (off phase)
+    // this is ignored when camera is controlled externally
+    if ((micros() - timer > pulse_len + pulse_wait) && modeOfOperation != 2) {
+      pulsed = false;
+    }
+  }
+}
+
+/********************************* SETUP CODE *********************************/
 
 void setup() {
   // POWER LED
@@ -516,8 +568,10 @@ void setup() {
   pinMode(3, OUTPUT); //LASER -> CAMERA
 
   // I2C communication with DAC
-  Wire.begin();
-  Wire.setClock(400000);
+  I2c.begin();
+  I2c.setSpeed(1); // Set to high-speed mode
+  I2c.pullup(1);
+  I2c.timeOut(10); // 10ms timeout
 
   // Wait until serial becomes available
   Serial.begin(9600);
@@ -543,23 +597,21 @@ void setup() {
   checkInterlock();
 }
 
-////////////////////////////////////////
+/***************************** INFINITE MAIN LOOP *****************************/
 
 void loop() {
   check();
-  if (!interlock_open && power != 0) {
-    // ===================================
-    none();               // IS NOT A WAVE
-    // ===================================
-    if (tot_micro != 0) { //     IS A WAVE
-      sine();
-      square();
-      triangle();
-      sawtooth();
-    } // ==================================
-    if (pulse_len != 0) { //     IS A PULSE
-      pulse();
-    } // ==================================
+
+  if(power == 0) return;
+
+  switch(modeOfModulation){
+    case 0: none();
+    case 1: if (tot_micro != 0 || modeOfOperation == 2) square();
+    case 2: if (tot_micro != 0) sine();
+    case 3: if (tot_micro != 0) triangle();
+    case 4: if (tot_micro != 0) sawtooth();
+    case 7: if (tot_micro != 0 || modeOfOperation == 2) pulse();
   }
 }
+
 
