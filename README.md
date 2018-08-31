@@ -96,6 +96,57 @@ As the Pi is being used a server, it needs to be set up to run headless. This pr
 
 <TALK ABOUT DRIVER> <avrdude> <USB TO SERIAL HACK FOR LASER?>
 
+--
+sudo avrdude -p atmega328p -P /dev/ttyACM0 -c arduino -U flash:w:arduino.hex:i
+--
+
+create a shell script 'laserUSBtoSerial.sh' (alternatively, download it from [here](./laserUSBtoSerial.sh)
+
+'''shell
+#!/bin/bash
+modprobe ftdi_sio
+echo 0d4d 003d > /sys/bus/usb-serial/drivers/ftdi_sio/new_id
+udevadm control --reload && udevadm trigger
+'''
+
+say what it does
+
+needs to be run using 'su' as follows:
+
+'''ShellSession
+sudo su
+./laserUSBtoSerial.sh
+exit
+'''
+
+alternatively, (preffered) set it as a startup script
+
+/lib/systemd/system/laserUSBtoSerial.service
+
+description here (complete it): https://www.freedesktop.org/software/systemd/man/systemd.service.html
+
+'''
+[Unit]
+Description=Enable Coherent Laser USB-to-Serial
+
+[Service]
+Type=oneshot
+ExecStart=/home/pi/laserUSBtoSerial.sh
+
+[Install]
+WantedBy=multi-user.target
+'''
+
+sudo chmod 744 laserUSBtoSerial.sh
+
+then start it using
+
+'''ShellSession
+sudo systemctl enable laserUSBtoSerial.service
+'''
+
+reboot
+
 
 #### Pin Assignment
 
@@ -136,7 +187,7 @@ The
 
 <Oscilloscope>
 
-Talk about physical and software maximums / minimums and why you should not cross them
+Talk about physical and software maximums / minimums and why you should not cross them (show borderline cases)
 
 
 ## The Software
@@ -144,6 +195,27 @@ Talk about physical and software maximums / minimums and why you should not cros
 
 ### Server
 
+
+CRATE A FILE FROM THIS AND HOST IT, AND CLEAN IT UP, LIKE ABOVE
+
+
+'''
+[Unit]
+Description=Python3 server
+After=multi-user.target
+Wants = network-online.target
+After = network.target network-online.target
+
+[Service]
+Type=idle
+Restart=always
+ExecStart=/usr/bin/python3 /home/pi/server.py
+
+[Install]
+WantedBy=multi-user.target
+'''
+
+/lib/systemd/system/server.service
 
 #### Client
 
