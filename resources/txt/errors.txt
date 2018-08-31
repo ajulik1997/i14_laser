@@ -19,7 +19,7 @@
 |--------- 3X : TTY PORT ERRORS --------------------------------|
 | 30 - Unexpected TTY port error								|
 | 31 - Unable to connect to specified TTY port					|
-| 32 - A timeout occurred when reading from TTY port			|
+| 32 - A time out occurred when reading from TTY port			|
 | 33 - Laser returned an error while executing command			|
 | 34 - Arduino returned an unexpected response					|
 | 35 - Unable to edit TTY settings for Arduino compatibility	|
