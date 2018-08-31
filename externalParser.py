@@ -1,7 +1,7 @@
 ###############################################################################
 ###                                                                         ###
 ###     Written by Alexander Liptak (GitHub: @ajulik1997)                   ###
-###     Date: Summmer 2018                                                  ###
+###     Date: Summer 2018                                                   ###
 ###     E-Mail: Alexander.Liptak.2015@live.rhul.ac.uk                       ###
 ###     Phone: +44 7901 595107                                              ###
 ###                                                                         ###
@@ -10,8 +10,10 @@
 ##### IMPORTS #################################################################
 
 import RPi.GPIO as GPIO                 ## for GPIO control
-from BioRay import laser                ## serial control of laser
+from BioRay import laser                ## EXTERNAL BIORAY SERIAL CONTROLLER
 from errors import errno, warn_parse    ## EXTERNAL ERROR DICTIONARY
+from MCP4725 import intensity           ## EXTERNAL DAC CONTROLLER
+from arduino import *					## Arduino laser controller
 
 ##### GLOBAL VARS #############################################################
 
@@ -19,26 +21,22 @@ LASER_POWER = 0                 ## reset laser power to zero
 LASER_MODE = 'indep'            ## reset laser mode to independent operation
 LASER_MODULATION = 'full'       ## reset modulation to full (no modulation)
 LASER_MODULATION_FREQ = 1       ## reset modulation frequency to default
-LASER_MODULATION_DUTY = 50      ## reset modulation duty to default 
+LASER_MODULATION_DUTY = 50      ## reset modulation duty to default
+
+STRICT_MODE = True
 
 ##### STARTUP INIT ############################################################
 
-## set up GPIO modes 
+## set up GPIO pins 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 GPIO.setup([4,17], GPIO.IN) ## 4: INTERLOCK; 17: INTERLOCK_OVERRIDE
-GPIO.setup([18], GPIO.OUT)
 
-## set up interrupt to switch off laser on interlock open or override off                   ##CHANGE THIS TO MODULATION
-GPIO.add_event_detect(4, GPIO.FALLING,
-                      callback=lambda x: laser("SOUR:AM:STAT OFF"))
-GPIO.add_event_detect(17, GPIO.FALLING,
-                      callback=lambda x: laser("SOUR:AM:STAT OFF"))
+setLaserPower(0)
+setOperationMode('indep')
 
-## initial interlock status check:
-if GPIO.input(4) == 0 and GPIO.input(17) == 0: laser("SOUR:AM:STAT OFF")
+## ERROR HANDLING NEEDS TO BE REVISETED
 
-#### set laser power to 0                                                               ##TODO
 
 #### reset laser mode to independent mode                                               ##TODO
 
@@ -49,8 +47,8 @@ if GPIO.input(4) == 0 and GPIO.input(17) == 0: laser("SOUR:AM:STAT OFF")
 def interlock_check():
     '''Returns interlock and override status'''
     
-    if GPIO.input(4) == 1: return 'L00'     ## interlock closed
-    if GPIO.input(17) == 1: return 'L09'    ## interlock open, override on
+    if GPIO.input(4) == 1: return '00'     ## interlock closed
+    if GPIO.input(17) == 1: return '09'    ## interlock open, override on
     return '90'                            ## interlock open, override off
 
 ##### ARGUMENT CHECKS #########################################################
@@ -69,10 +67,37 @@ def argument_check(test_args, known_args):
         else:                                               ## expecting number
             if not test_args[i].isnumeric():    ## is the passed arg numeric?
                 return '24'
-            if (float(test_args[i]) < known_args[i][0] 
-            or  float(test_args[i]) > known_args[i][1]):    ## is it in range?
-                return '25'
+            if not STRICT_MODE:					## is it in range?
+				if float(test_args[i]) < known_args[i][0]:
+					test_args[i] = known_args[i][0]
+					return '02'
+				if float(test_args[i]) > known_args[i][1]:
+					test_args[i] = known_args[i][1]
+					return '02'
+            else:
+				if (float(test_args[i]) < known_args[i][0] 
+				or  float(test_args[i]) > known_args[i][1]):    
+					return '25'
     return '00'
+
+##### QUERY HANDLER ###########################################################
+
+def query(list):
+    '''HANDLES ALL LASER QUERY RESPONSES'''
+    
+    if list[0] != '00': return errno(list[0])
+    return (list[1]+'\r\n').encode(encoding='ascii')
+
+##### COMMAND HANDLER #########################################################
+
+def command(test_args, known_args):														############### FINISH ME
+    a_check = argument_check(test_args, known_args)
+    i_check = interlock_check()
+    warn_list = []
+	
+	if a_check != '00': return a_check   ## arguments are not good
+    if i_check == '90': return i_check   ## ilock open, override off
+    if i_check == '09': warn_list.append('09')  ## append override warning if on
 
 ##### RULEBOOK FUNCTIONS - LASER ##############################################
 
@@ -85,30 +110,44 @@ def laser_mains_CMD(args):
 
     if a_check != '00': return errno(a_check)   ## arguments are not good
     if i_check == '90': return errno(i_check)   ## ilock open, override off
-    if i_check == '09': warn_list.append('09')      ## append override warning if on
+    if i_check == '09': warn_list.append('09')  ## append override warning if on
     
     ## add warning and do nothing if laser is already on/off
     if args[0].upper() == laser("SOUR:AM:STAT?")[-1]: warn_list.append('01')
     else:   ## time to switch on/off laser, and see if it worked
         result = laser("SOUR:AM:STAT "+args[0].upper())
-        if result[0] != '00': return (' '.join(result)+'/r/n')   ## laser did not switch on OK
+        if result[0] != '00': return warn_parse(result) ## laser returned error
     
-    if len(warn_list) == 0: return errno('00')  ## no warnings, return OK
-    if len(warn_list) == 1: return errno(warn_list[0])  ## return a warning
-    return ' '.join(warn_list)  ## return all the warnings formatted nicely
+    return warn_parse(warn_list)  ## return all the warnings formatted nicely
 
 #######################################
     
 def laser_mains_QUERY():
     '''Queries whether laser is ON or OFF'''
     
-    return laser("SOUR:AM:STAT?")[-1]
+    return query(laser("SOUR:AM:STAT?"))
 
 #######################################
 
-def laser_power_CMD(args):
+def laser_power_CMD(args):																### WILL BE DONE OVER ARDUINO NOW
+    '''Sets amplitude of laser beam'''
+    
     a_check = argument_check(args, [[0,100]])
-    return a_check
+    i_check = interlock_check()
+    warn_list = []
+    
+    if a_check != '00' or a_check != '02': return errno(a_check)   ## arguments are not good
+    if a_check == '02': return 
+    if i_check == '90': return errno(i_check)   ## ilock open, override off
+    if i_check == '09': warn_list.append('09')  ## append override warning if on
+    
+    ## add warning and do nothing if laser power already set to wanted value
+    if args[0] == LASER_POWER: warn_list.append('01')
+    else: ## set laser power
+        result = intensity(args[0])
+        if result != '00': return errno(result)
+    
+    return warn_parse(warn_list)
 
 def laser_power_QUERY():
     return str(LASER_POWER)
@@ -137,8 +176,8 @@ def laser_mod_polarity_QUERY():
 
 def laser_modulation_CMD(args):
     a_check = argument_check(args, [['sine', 'square', 'triangle', 'sawtooth', 'full'],
-                               [0, 10000],
-                               [0, 100]])
+                                    [0, 10000],
+                                    [0, 100]])
     return a_check
 
 def laser_modulation_QUERY():
@@ -192,6 +231,14 @@ def interlock_override_QUERY():
     if GPIO.input(17) == 1:
         return 'on'
 
+##### RULEBOOK FUNCTIONS - STRICT MODE ########################################
+
+def strict_mode_CMD(args):
+	pass
+
+def strict_mode_QUERY():
+	pass
+
 ##### MAIN ####################################################################
 
 def parse(args):
@@ -221,7 +268,10 @@ def parse(args):
         '?INFO_LASER'         : info_laser_QUERY(),
         '?INFO_SERVER'        : info_server_QUERY(),
         #######################
-        '?INTERLOCK_STATUS'   : interlock_status_QUERY(),
-        '?INTERLOCK_OVERRIDE' : interlock_override_QUERY()
+        '?INTERLOCK_STATUS'   : interlock_status_QUERY(args[1:]),
+        '?INTERLOCK_OVERRIDE' : interlock_override_QUERY(),
+		#######################
+		'STRICT_MODE'		  : strict_mode_CMD(),
+		'?STRICT_MODE'		  : strict_mode_QUERY()
     }
     return rulebook.get(args[0], errno('20'))
