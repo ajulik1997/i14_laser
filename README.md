@@ -40,9 +40,13 @@ At the core of this "system" lies a [Raspberry Pi](https://www.raspberrypi.org/)
 
 A diagram that illustrates this setup can be seen below. It was created using [draw.io](https://www.draw.io/), and the source can be downloaded [here](./resources/flowcharts/project_map.xml).
 
+
 ![Project Map](./resources/flowcharts/project_map.png)
 
+
 ### Key Features
+
+The most noteworthy and desirable features of this project can be summarized as follows:
 
   - Remote control of laser over LAN
   - Remote monitoring of laser and safety interlock status over LAN
@@ -61,7 +65,7 @@ A diagram that illustrates this setup can be seen below. It was created using [d
 The following section documents the steps required to correctly set up the hardware. It describes the setup of the operating system on the Raspberry Pi, as well as the required wiring between the Raspberry Pi, Arduino, DAC, laser and camera.
 
 ### Raspberry Pi
-
+'''
 The Raspberry Pi used in this project is the [Raspberry Pi 3 B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/) (upgraded from the Raspberry Pi B Rev 2.0 on which development took place), chosen due to the following features:
   - 1.4GHz processor (upgraded from 700Mhz)
   - 1GB SDRAM (upgraded from 512MB)
@@ -75,7 +79,7 @@ According to our specification, the Raspberry Pi needs to be set up so that it c
   - communicate over SSH
   - run code written in Python
   - <INSERT MORE ITEMS HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>
-
+'''
 #### Operating System
 
 The operating system chosen for this project was [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/), an OS based on Debian Stretch with no desktop interface, chosen for its minimal footprint and high compatibility with Raspberry Pi. The required image was downloaded from the [official mirror](https://downloads.raspberrypi.org/raspbian_lite_latest), and written to a 16GB microSD card according to the [installation instructions](https://www.raspberrypi.org/documentation/installation/installing-images/README.md).
