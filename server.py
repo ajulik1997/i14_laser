@@ -1,7 +1,7 @@
 ###############################################################################
 ###                                                                         ###
 ###     Written by Alexander Liptak (GitHub: @ajulik1997)                   ###
-###     Date: Summmer 2018                                                  ###
+###     Date: Summer 2018                                                   ###
 ###     E-Mail: Alexander.Liptak.2015@live.rhul.ac.uk                       ###
 ###     Phone: +44 7901 595107                                              ###
 ###                                                                         ###
