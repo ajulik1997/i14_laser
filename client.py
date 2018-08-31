@@ -1,7 +1,7 @@
 ###############################################################################
 ###                                                                         ###
 ###     Written by Alexander Liptak (GitHub: @ajulik1997)                   ###
-###     Date: Summmer 2018                                                  ###
+###     Date: Summer 2018                                                   ###
 ###     E-Mail: Alexander.Liptak.2015@live.rhul.ac.uk                       ###
 ###     Phone: +44 7901 595107                                              ###
 ###                                                                         ###
@@ -36,5 +36,5 @@ while True:
     if msg == 'exit':
         clientsocket.close()
     else:
-        clientsocket.send((msg+'\r\n').encode('ascii'))
+        clientsocket.send((msg+'\r\n').encode(encoding='ascii'))
         print('RECEIVED MESSAGE:', clientsocket.recv(1024).decode('ascii'))
