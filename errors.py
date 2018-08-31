@@ -1,11 +1,14 @@
 ###############################################################################
 ###                                                                         ###
 ###     Written by Alexander Liptak (GitHub: @ajulik1997)                   ###
-###     Date: Summmer 2018                                                  ###
+###     Date: Summer 2018                                                   ###
 ###     E-Mail: Alexander.Liptak.2015@live.rhul.ac.uk                       ###
 ###     Phone: +44 7901 595107                                              ###
 ###                                                                         ###
 ###############################################################################
+
+### CREATE UNIVERSAL ERROR HANDLER, DEPENDING ON TYPE, PRINTS APPROPRIATE ERROR
+
 
 def errno(num):
     '''
@@ -23,6 +26,7 @@ def errno(num):
         "00" : b'00 : Completed without errors\r\n',                        # {+++} 
         ##### 0X : SUCCESS WITH WARNINGS ##########################################
         "01" : b'01 : Command has no effect\r\n',                           # {&&&}
+        "02" : b'02 : One or more of the arguments were out of range\r\n',  # {&&&}
         "09" : b'09 : Safety interlock override is on\r\n',                 # {&&&}
         ##### 1X : MESSAGE ERRORS #################################################
         "10" : b'10 : Received message is too short or contains no data\r\n',
@@ -37,11 +41,12 @@ def errno(num):
         "23" : b'23 : One or more provided argument(s) not recognized\r\n',
         "24" : b'24 : One or more provided argument(s) are not of expected type\r\n',
         "25" : b'25 : One or more provided argument(s) are not in range\r\n',
-        ##### 3X : COM PORT ERRORS ################################################
-        "30" : b'30 : Unexpected COM port error\r\n',                       # {+++}
-        "31" : b'31 : Unable to connect to specified COM port\r\n',         # {+++}
-        "32" : b'32 : A timeout occurred when reading from COM port\r\n',
-        "33" : b'33 : Laser returned an error while executing command\r\n', # {+++} 
+        ##### 3X : TTY PORT ERRORS ################################################
+        "30" : b'30 : Unexpected TTY port error\r\n',                       # {+++}
+        "31" : b'31 : Unable to connect to specified TTY port\r\n',         # {+++}
+        "32" : b'32 : A timeout occurred when reading from TTY port\r\n',
+        "33" : b'33 : Laser returned an error while executing command\r\n', # {+++}
+		"34" : b'34 : Arduino returned an unexpected response\r\n',
         ##### 4X : I2C ERRORS #####################################################
         "40" : b'40 : Unable to connect to I2C device\r\n',                 # {+++}
         ##### 9X : SAFETY ERRORS ##################################################
@@ -51,7 +56,14 @@ def errno(num):
     
     return errors.get(num, b'?? : An unknown error code was returned\r\n')
 
-def warn_parse(list):
+def warn_parse(list):																	## REVISIT
+    '''HANDLES RETURNS WHERE IT IS POSSIBLE FOR MANY WARNINGS TO OCCUR'''
+
     if len(list) == 0: return errno('00')
     if len(list) == 1: return errno(list[0])
-    return (' '.join(list)+'\r\n').encode('ascii')
+    return (' '.join(list)+'\r\n').encode(encoding='ascii')
+
+def descriptive_err(errno, description):
+	'''HANDLES ERRORS THAT PROVIDE A ADDITIONAL INFORMATION'''
+	
+	return (errno+' : '+str(description)+'\r\n').encode(encoding='ascii')
