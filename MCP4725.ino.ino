@@ -150,7 +150,7 @@ inline void calibrate() {
 /** trigger * if mode of operation is "master", signal pin in sync with wave **/
 
 inline void trigger(uint16_t val) {
-  if (val > threshold) {
+  if (val > threshold*power) {
     digitalWrite(3, HIGH);
     return;
   }
