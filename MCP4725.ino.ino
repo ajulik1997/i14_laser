@@ -32,16 +32,17 @@
 
 // MODULATION VARIABLES
 uint16_t power = 0;      // Power of laser: 0-4095
-uint32_t tot_micro = 0;  // MICROseconds that a full cycle should last
-uint32_t off_micro = 0;  // MICROseconds that should be spend low during cycle
-uint32_t pulse_len = 0;  // MICROseconds to pulse laser for
-uint32_t pulse_wait = 0; // MICROseconds to wait between pulses
+uint32_t tot_micro = 0;  // MICROseconds that a full cycle should last (period)
+uint32_t off_micro = 0;  // MICROseconds delay between cycles
 
 // WAVE VARIABLES
 bool needs_calibrating = true;  // Wave needs calibrating
+bool waiting = true;            // Is wave waiting until delay is complete?
 float divisor = 1.0;            // How many steps per wave (more steps, nicer wave, lower frequency)
 float increment = 0.01;         // How much to increment the divisor (prevents calibration from taking too long)
 unsigned long timer = 0;        // Wave timer (how long did my wave take, compared to target time)
+unsigned long last_timer = 0;   // Wave timer, so we can revert to this in case we overincrement during alibration
+float threshold = 50.0;      // Threshold of power above which laser triggers camera
 
 // STATE VARIABLES
 bool interlock_open = true;     // State of gate
@@ -126,18 +127,31 @@ void setRGB(char colour) {
 /*** calibrate ** adjusts steps per period of wave for requested frequency  ***/
 // STILL NEED TO HAVE A LOOK AT THIS (percentage, fallback, idk idk, takes too long with low power? + comment on it!!) !!!!!!!!
 inline void calibrate() {
-  if ((micros() - timer) < (tot_micro)) {
+  // to avoid micros from increasing while executing function
+  unsigned long temp_timer = micros();
+  
+  // is the wave long enough
+  if ((micros() - timer) <= (tot_micro)) {
     divisor = divisor + increment;
-  } else {
-    needs_calibrating = !needs_calibrating;
+    return;
   }
+
+  // did we overstep? which is closer?
+  if ((fabs(temp_timer - timer) - tot_micro) > (fabs(temp_timer - last_timer) - tot_micro)){
+    divisor = divisor - increment;
+    return;
+  }
+
+  // finished calibrating
+  needs_calibrating = !needs_calibrating;
+  
 }
 
 /** trigger * if mode of operation is "master", signal pin in sync with wave **/
 
 inline void trigger(uint16_t val) {
-  if (val > power * 0.5) {    // replace 0.5 with a different number of function
-    digitalWrite(3, HIGH);    //  to change the trigger threshold
+  if (val > threshold) {
+    digitalWrite(3, HIGH);
     return;
   }
   digitalWrite(3, LOW);
@@ -230,10 +244,9 @@ inline void checkForSerial() {
         float val = str.substring(str_index + 1, str.indexOf(" ", str_index)).toFloat();  // extract float
         switch (str.charAt(str_index)) {            // first character signals what float means, sort accordingly
           case 'A': power = round(4095 * (val / 100.0)); break;
-          case 'F': tot_micro = round((1.0 / val) * 1e6); increment = 100 * pow((pow(tot_micro / 1e6, -1)) + 1, -1); break;
-          case 'D': off_micro = round(tot_micro * (1.0 - (val / 100.0))); break;
-          case 'P': pulse_len = val * 1e6; break;
-          case 'W': pulse_wait = val * 1e6; break;
+          case 'T': threshold = val; break;
+          case 'P': tot_micro = round(val * 1e3); increment = pow(tot_micro, 2) / (5e9) + 0.001; break;
+          case 'D': off_micro = round(val * 1e3); break;
         }
         str_index = str.indexOf(" ", str_index) + 1; // continue to next space
       }
@@ -295,20 +308,29 @@ inline void sine() {
   delayMicroseconds(16);    // necessary for Pi to settle pins before reading
   needs_calibrating = true; // wave will need to be calibrated on first start
   divisor = 1.0;            // reset divisor, this will be calibrated later
+  waiting = true;
+  timer = micros();
 
   // should stay in this loop until modulation mode is changed
   while (modeOfModulation == 1) {
     check();
-
+    
     // if power is zero, no point generating wave, set DAC to 0 once, LED off
     if (power == 0) {
       genericOff();
       continue;
     }
 
+    // do not proceede with the wave if we need to delay
+    if (waiting){
+      if ((micros() - timer) > off_micro) waiting = false;
+      continue;
+    }
+
     // if wave needs calibrating, set LED to magenta, record start time
     if (needs_calibrating) {
       timer = micros();
+      last_timer = timer;
       setRGB('M');
       // will need to call generic calibration function after wave is donw
     }
@@ -319,7 +341,6 @@ inline void sine() {
       writeToDAC(val);
       if (modeOfOperation == 1) trigger(val);
     }
-    delayMicroseconds(off_micro);
 
     // call generic calibration function, if required previously
     if (needs_calibrating) {
@@ -327,8 +348,10 @@ inline void sine() {
       continue;
     }
 
-    // if wave is calibrated, set LED to blue, we are lasing
+    // if wave is calibrated, set LED to blue, we are lasing, get ready for next cycle
     setRGB('B');
+    timer = micros();
+    waiting = true;
   }
 }
 
@@ -338,6 +361,8 @@ inline void square() {
   delayMicroseconds(16);    // necessary for Pi to settle pins before reading
   needs_calibrating = true; // not a calibration, but reusing bool to save memory
   bool on = false;          // whether the laser is currently on or off
+  waiting = true;
+  timer = micros();
 
   // should stay in this loop until modulation mode is changed
   while (modeOfModulation == 2) {
@@ -349,10 +374,16 @@ inline void square() {
       continue;
     }
 
+    // do not proceede with the wave if we need to delay
+    if (waiting){
+      if ((micros() - timer) > off_micro) waiting = false;
+      continue;
+    }
+
     // power is nonzero, alternate between on and off (on phase)
     if (!on && modeOfOperation != 2) {
-      timer = micros();
       writeToDAC(power);
+      timer = micros();
       if (modeOfOperation == 1) trigger(power);
       on = true;
       needs_calibrating = true;
@@ -369,8 +400,9 @@ inline void square() {
     }
 
     // (wait for off, switch off)
-    if ((micros() - timer > tot_micro - off_micro) && needs_calibrating) {
+    if ((micros() - timer > tot_micro/2.0) && needs_calibrating) {
       writeToDAC(0);
+      timer = micros();
       if (modeOfOperation == 1) trigger(0);
       needs_calibrating = false;
       setRGB('K');
@@ -387,8 +419,9 @@ inline void square() {
 
     // (off phase)
     // this is ignored when camera is controlled externally
-    if ((micros() - timer > tot_micro) && modeOfOperation != 2) {
+    if ((micros() - timer > tot_micro/2.0) && modeOfOperation != 2) {
       on = false;
+      waiting = true;
     }
   }
 }
@@ -399,6 +432,8 @@ inline void triangle() {
   delayMicroseconds(16);    // necessary for Pi to settle pins before reading
   needs_calibrating = true; // wave will need to be calibrated on first start
   divisor = 1.0;            // reset divisor, this will be calibrated later
+  waiting = true;
+  timer = micros();
 
   while (modeOfModulation == 3) {
     check();
@@ -406,6 +441,12 @@ inline void triangle() {
     // if power is zero, no point generating wave, set DAC to 0 once, LED off
     if (power == 0) {
       genericOff();
+      continue;
+    }
+
+    // do not proceede with the wave if we need to delay
+    if (waiting){
+      if ((micros() - timer) > off_micro) waiting = false;
       continue;
     }
 
@@ -418,11 +459,10 @@ inline void triangle() {
 
     // one full period of sine wave is generated here, number of steps decided by divisor
     for (float x = -(float)power; x < power; x += (float)power / divisor) {
-      uint16_t val = round(-abs(x) + power);
+      uint16_t val = round(-fabs(x) + power);
       writeToDAC(val);
       if (modeOfOperation == 1) trigger(val);
     }
-    delayMicroseconds(off_micro);
 
     // call generic calibration function, if required previously
     if (needs_calibrating) {
@@ -430,8 +470,10 @@ inline void triangle() {
       continue;
     }
 
-    // if wave is calibrated, set LED to blue, we are lasing
+    // if wave is calibrated, set LED to blue, we are lasing, get ready for next cycle
     setRGB('B');
+    timer = micros();
+    waiting = true;
   }
 }
 
@@ -441,10 +483,25 @@ inline void sawtooth() {
   delayMicroseconds(16);    // necessary for Pi to settle pins before reading
   needs_calibrating = true; // wave will need to be calibrated on first start
   divisor = 1.0;            // reset divisor, this will be calibrated later
+  waiting = true;
+  timer = micros();
 
   while (modeOfModulation == 4) {
     check();
 
+    // if power is zero, no point generating wave, set DAC to 0 once, LED off
+    if (power == 0) {
+      genericOff();
+      continue;
+    }
+    
+    // do not proceede with the wave if we need to delay
+    writeToDAC(0);
+    if (waiting){
+      if ((micros() - timer) > off_micro) waiting = false;
+      continue;
+    }
+    
     // if wave needs calibrating, set LED to magenta, record start time
     if (needs_calibrating) {
       timer = micros();
@@ -453,7 +510,6 @@ inline void sawtooth() {
     }
 
     // one full period of sine wave is generated here, number of steps decided by divisor
-    delayMicroseconds(off_micro);
     for (float x = 0; x < power; x += (float)power / divisor) {
       writeToDAC(x);
       if (modeOfOperation == 1) trigger(x);
@@ -465,8 +521,10 @@ inline void sawtooth() {
       continue;
     }
 
-    // if wave is calibrated, set LED to blue, we are lasing
+    // if wave is calibrated, set LED to blue, we are lasing, get ready for next cycle
     setRGB('B');
+    timer = micros();
+    waiting = true;
   }
 }
 
@@ -476,7 +534,9 @@ inline void sawtooth() {
 inline void pulse() {
   delayMicroseconds(16);        // necessary for Pi to settle pins before reading
   needs_calibrating = true;     // not a calibration, but reusing bool to save memory
-  bool pulsed = false;          // whether the pulse has already occured
+  //bool pulsed = false;          // whether the pulse has already occured
+  waiting = false;
+  //??? timer = micros();
 
   while (modeOfModulation == 7) {
     check();
@@ -487,11 +547,11 @@ inline void pulse() {
     }
 
     // power is nonzero, alternate between on and off (on phase)
-    if (!pulsed && modeOfOperation != 2) {
+    if (!waiting && modeOfOperation != 2) {
       timer = micros();
       writeToDAC(power);
       if (modeOfOperation == 1) trigger(power);
-      pulsed = true;
+      waiting = true;
       needs_calibrating = true;
       setRGB('B');
       continue;
@@ -506,8 +566,9 @@ inline void pulse() {
     }
 
     // (wait for off, switch off)
-    if ((micros() - timer > pulse_len) && needs_calibrating) {
+    if ((micros() - timer > tot_micro) && needs_calibrating) {
       writeToDAC(0);
+      timer = micros();
       if (modeOfOperation == 1) trigger(0);
       needs_calibrating = false;
       setRGB('K');
@@ -524,8 +585,8 @@ inline void pulse() {
 
     // (off phase)
     // this is ignored when camera is controlled externally
-    if ((micros() - timer > pulse_len + pulse_wait) && modeOfOperation != 2) {
-      pulsed = false;
+    if ((micros() - timer > off_micro) && modeOfOperation != 2) {
+      waiting = false;
     }
   }
 }
@@ -593,9 +654,6 @@ void setup() {
       delay(5);
     }
   }
-
-  // Initial check to set state variables
-  checkInterlock();
 }
 
 /***************************** INFINITE MAIN LOOP *****************************/
@@ -603,16 +661,15 @@ void setup() {
 void loop() {
   check();
 
-  if(power == 0) return;
+  if (power == 0) return;
 
-  switch(modeOfModulation){
+  switch (modeOfModulation) {
     case 0: none();
-    case 1: if (tot_micro != 0 || modeOfOperation == 2) square();
-    case 2: if (tot_micro != 0) sine();
+    case 1: if (tot_micro != 0) sine();
+    case 2: if (tot_micro != 0 || modeOfOperation == 2) square();
     case 3: if (tot_micro != 0) triangle();
     case 4: if (tot_micro != 0) sawtooth();
     case 7: if (tot_micro != 0 || modeOfOperation == 2) pulse();
   }
 }
-
 
