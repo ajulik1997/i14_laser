@@ -47,7 +47,7 @@ def sendSerial(string, path='/dev/ttyACM0'):
                            dsrdtr = False) as ser:
             ser.write((string + ' \r\n').encode(encoding='ascii'))
             time.sleep(0.1)
-            response = ser.readline
+            response = ser.readline()
             if response == b'OK\r\n':
                 return('00')
             elif response == b'':
