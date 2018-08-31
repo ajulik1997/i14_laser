@@ -244,7 +244,7 @@ inline void checkForSerial() {
         float val = str.substring(str_index + 1, str.indexOf(" ", str_index)).toFloat();  // extract float
         switch (str.charAt(str_index)) {            // first character signals what float means, sort accordingly
           case 'A': power = round(4095 * (val / 100.0)); break;
-          case 'T': threshold = val; break;
+          case 'T': threshold = val / 100.0; break;
           case 'P': tot_micro = round(val * 1e3); increment = pow(tot_micro, 2) / (5e9) + 0.001; break;
           case 'D': off_micro = round(val * 1e3); break;
         }
