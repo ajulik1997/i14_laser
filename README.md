@@ -40,16 +40,17 @@ At the core of this "system" lies a [Raspberry Pi](https://www.raspberrypi.org/)
 
 ### Key Features
 
-- Remote control of laser over LAN
-- Remote monitoring of laser and safety interlock status over LAN
-- High-precision control of laser output intensity
-- Modulation of laser beam with pre-set waveforms of customizable frequency:
-	- Sine Wave 	<CONTINUE HERE AFTER I KNOW ABSOLUTE LIMITS>
-- Synchronization of laser with connected camera:
-	- "gated mode" : laser is turned on only when camera is exposing
-	- "master mode" : camera exposure triggered when laser intensity reaches a customizable threshold
-- Robust and extensible error handling code
-- Modular, well-documented code for easy customization
+	- Remote control of laser over LAN
+	- Remote monitoring of laser and safety interlock status over LAN
+	- High-precision control of laser output intensity
+	- Modulation of laser beam with pre-set waveforms of customizable period length and inter-cycle delay:
+		- Sine wave, triangle wave, sawtooth wave: cycle period between 1 millisecond and 1 second
+		- Square wave, pulse wave: cycle between: cycle period between 1 millisecond and 1 hour
+	- Synchronization of laser with connected camera:
+		- "gated mode": laser is turned on only when camera is exposing
+		- "master mode": camera exposure triggered when laser intensity reaches a customizable threshold
+	- Robust and extensible error handling code
+	- Modular, well-documented code for easy customization
 
 ## The Hardware
 
