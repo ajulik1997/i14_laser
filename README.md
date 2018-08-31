@@ -21,6 +21,7 @@ The following documentation is designed as a guide to simplify the processes of 
 	- [LED Signalling](#led-signalling)
   - [Digital to Analog Converter](#digital-to-analog-converter)
     - [Laser modulation](#laser-modulation)
+  - [Camera](#camera)
 - [The Software](#the-software)
   - [Server](#server)
     - [Client](#client)
@@ -97,6 +98,7 @@ As the Pi is being used a server, it needs to be set up to run headless. This pr
 <TALK ABOUT DRIVER> <avrdude> <USB TO SERIAL HACK FOR LASER?>
 
 --
+http://www.ladyada.net/learn/avr/avrdude.html
 sudo avrdude -p atmega328p -P /dev/ttyACM0 -c arduino -U flash:w:arduino.hex:i
 --
 
@@ -125,12 +127,14 @@ alternatively, (preffered) set it as a startup script
 
 description here (complete it): https://www.freedesktop.org/software/systemd/man/systemd.service.html
 
+add as a file
+
 '''
 [Unit]
 Description=Enable Coherent Laser USB-to-Serial
 
 [Service]
-Type=oneshot
+Type=forking
 ExecStart=/home/pi/laserUSBtoSerial.sh
 
 [Install]
@@ -158,16 +162,20 @@ reboot
 
 ### Laser
 
-The 
+https://edge.coherent.com/assets/pdf/Coherent-BioRay-Operator-s-Manual.pdf
 
 <MODEL, DOCUMENTATION, CONTROLLER, USB-TO-SERIAL, ARDUINO???> <USB TO SERIAL HACK FOR LASER?>
 
 
 ### Arduino
 
+https://www.circuito.io/blog/arduino-uno-pinout/
+
 <MODEL, STORAGE, MEMORY>
 
 <MODES OF OPERATION, MODES OF MODULATION>
+
+https://www.sparkfun.com/datasheets/Components/BC546.pdf
 
 
 #### Pin Assignment
@@ -180,6 +188,14 @@ The
 
 ### Digital to Analog Converter
 
+https://www.adafruit.com/product/935
+
+https://learn.adafruit.com/mcp4725-12-bit-dac-tutorial
+
+https://www.sparkfun.com/datasheets/BreakoutBoards/MCP4725.pdf
+
+https://cdn-shop.adafruit.com/datasheets/mcp4725.pdf
+
 <SPECIFICATION> <DATA SHEET> <I2C>
   
  
@@ -188,6 +204,15 @@ The
 <Oscilloscope>
 
 Talk about physical and software maximums / minimums and why you should not cross them (show borderline cases)
+
+(add safety section here!)
+
+http://www.ti.com/lit/ds/symlink/cd54hc32.pdf
+
+
+### Camera
+
+https://www.alliedvision.com/fileadmin/content/documents/products/cameras/Manta/techman/Manta_TechMan.pdf
 
 
 ## The Software
@@ -237,11 +262,21 @@ WantedBy=multi-user.target
 
 ### Arduino Controller Script (Python)
 
+nohup
+
+https://raspberrypi.stackexchange.com/questions/9695/disable-dtr-on-ttyusb0/31298#31298
+
+https://linux.die.net/man/1/stty
+
 
 #### Arduino Controller Script (C for AVR)
 
 talk about why I had to replace the Wire library
 
+http://dsscircuits.com/articles/arduino-i2c-master-library
+
+changed compilation parameter to -O2 (talk about it) File --> Preferences --> Follow link at the bottom of page (using arduino 1.8.5)
+"%USERPROFILE%\AppData\Local" on Windows, C:\Users\lyv26778\AppData\Local\Arduino15\preferences.txt, change all occurences (3) of -Os to -O2, restart Arduino IDE
 
 ## Licensing
 
