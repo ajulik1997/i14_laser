@@ -13,12 +13,12 @@ The following documentation is designed as a guide to simplify the processes of 
   - [Raspberry Pi](#raspberry-pi)
     - [Operating System](#operating-system)
     - [Drivers and Packages](#drivers-and-packages)
-    - [Pin Assignment](#pin-assignment)
     - [Python](#python)
+    - [Pin Assignment](#pin-assignment)
   - [Laser](#laser)
   - [Arduino](#arduino)
     - [Pin Assignment](#pin-assignment)
-	- [LED Signalling](#led-signalling)
+  - [LED Signalling](#led-signalling)
   - [Digital to Analog Converter](#digital-to-analog-converter)
     - [Laser modulation](#laser-modulation)
   - [Camera](#camera)
@@ -35,8 +35,8 @@ The following documentation is designed as a guide to simplify the processes of 
 - [Licensing](#licensing)
 - [Author](#author)
 - [Acknowledgements](#acknowledgements)
- 
- 
+
+
 ## Introduction
 
 At the core of this "system" lies a [Raspberry Pi](https://www.raspberrypi.org/), used as a server running a python script which allows it to process text-based commands that it receives over network. A [Coherent Laser](https://www.coherent.com/) is connected to the Raspberry Pi via a USB-to-Serial interface, enabling the Pi to send commands to the laser and monitor its status. An [Arduino board](https://www.arduino.cc/) is also connected to the Raspberry Pi via a USB-to-Serial as well as a GPIO interface, and is mainly responsible for real-time generation of waveforms that are used to modulate the laser via a Digital-to-Analog converter (DAC). Additionally, a camera can also be connected to the Arduino, which can synchronize the camera's shutter with the modulation of the laser.
@@ -62,14 +62,13 @@ The most noteworthy and desirable features of this project can be summarized as 
   - Robust and extensible error handling
   - Modular, well-documented code for easy customization
 
- 
+
 ## The Hardware
 
 The following section documents the steps required to correctly set up the hardware. It describes the setup of the operating system on the Raspberry Pi, as well as the required wiring between the Raspberry Pi, Arduino, DAC, laser and camera.
 
-
 ### Raspberry Pi
-'''
+
 The Raspberry Pi used in this project is the [Raspberry Pi 3 B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/) (upgraded from the Raspberry Pi B Rev 2.0 on which development took place), chosen due to the following features:
   - 1.4GHz processor (upgraded from 700Mhz)
   - 1GB SDRAM (upgraded from 512MB)
@@ -77,13 +76,14 @@ The Raspberry Pi used in this project is the [Raspberry Pi 3 B+](https://www.ras
   - Gigabit Ethernet
   - MicroSD port
   - PoE support
-  
+
 According to our specification, the Raspberry Pi needs to be set up so that it can do the following:
   - run a headless Linux OS
-  - communicate over SSH
-  - run code written in Python
-  - <INSERT MORE ITEMS HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>
-'''
+  - securely connect to a LAN
+  - communicate with other devices on the LAN via SSH
+  - communicate with laser via Serial-over-USB
+  - communicate with Arduino via Serial-over-USB and GPIO
+  - start Python server at boot and ensure it restarts on exit
 
 
 #### Operating System
@@ -92,13 +92,21 @@ The operating system chosen for this project was [Raspbian Stretch Lite](https:/
 
 As the Pi is being used a server, it needs to be set up to run headless. This process is described in detail [here](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md), but the most important step (activating SSH), can be accomplished by mounting the SD card on any Windows or 
 
+MORE GOES ON MONDAY
 
 #### Drivers and Packages
+
+This section highlights the packages and drivers that need to be installed or set up, either as dependencies by the server, or optional add-ons for easier developement and set-up.
+
+##### Flashing '.hex' files to Arduino
+
+As of Arduino 1.6, it is possible to develop Arduino applications directly on the Raspberry Pi, although this is not recommended, as the newly released Arduino CLI has too many dependencies (up to 1GB, including a desktop environment, which is not necessary on a headless Raspberry Pi) for a system with limited storage and memory. 
 
 <TALK ABOUT DRIVER> <avrdude> <USB TO SERIAL HACK FOR LASER?>
 
 --
 http://www.ladyada.net/learn/avr/avrdude.html
+
 sudo avrdude -p atmega328p -P /dev/ttyACM0 -c arduino -U flash:w:arduino.hex:i
 --
 
@@ -151,11 +159,10 @@ sudo systemctl enable laserUSBtoSerial.service
 
 reboot
 
+#### Python
+
 
 #### Pin Assignment
-
-
-#### Python
 
 <VERSION, PACKAGES>
 
@@ -197,8 +204,8 @@ https://www.sparkfun.com/datasheets/BreakoutBoards/MCP4725.pdf
 https://cdn-shop.adafruit.com/datasheets/mcp4725.pdf
 
 <SPECIFICATION> <DATA SHEET> <I2C>
-  
- 
+
+
 #### Laser Modulation
 
 <Oscilloscope>
