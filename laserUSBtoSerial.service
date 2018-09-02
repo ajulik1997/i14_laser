@@ -1,0 +1,9 @@
+[Unit]
+Description=Enable Coherent Laser USB-to-Serial
+
+[Service]
+Type=forking
+ExecStart=/home/pi/laserUSBtoSerial.sh
+
+[Install]
+WantedBy=multi-user.target
