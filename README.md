@@ -4,7 +4,6 @@ Software developed for the remote control and monitoring of a laser at the [Diam
 
 The following documentation is designed as a guide to simplify the processes of preparing the hardware and installing this software, as well as extending its functionality and applying it to other components or instruments.
 
-
 ## Table of Contents
 
 - [Introduction](#introduction)
@@ -92,7 +91,7 @@ The operating system chosen for this project was [Raspbian Stretch Lite](https:/
 
 As the Pi is being used a server, it needs to be set up to run headless. This process is described in detail [here](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md), but the most important step (activating SSH), can be accomplished by mounting the SD card on any Windows or 
 
-MORE GOES ON MONDAY
+MORE GOES HERE ON MONDAY
 
 Talk about SSH and SCP
 
@@ -143,27 +142,19 @@ echo 0d4d 003d > /sys/bus/usb-serial/drivers/ftdi_sio/new_id
 udevadm control --reload && udevadm trigger
 ```
 
-`modprobe` adds an `ftdi_sio` module into the Linux kernel. We insert the 
+`modprobe` adds an `ftdi_sio` module into the Linux kernel. Using `echo`, we then insert the Vendor ID (`0d4d` - registered by Coherent) and the Product ID (`003d` - specific to this laser model) into a file newly created by `modprobe`. This allows the kernel to associate a device that identifies itself using that VID/PID combination (our laser) with the relevant FTDI driver. Finally, for a change to be detected by the kernel, the USB device needs to unplugged (if it is plugged in), and replugged. If physical access to the device is not available as expected, `udevadm` is used to reload the udev rules and trigger a USB replug event.
 
-needs to be run using 'su' as follows:
-
-sudo su -c ‘command here’
+This script needs to be executed with superuser privileges after every reboot:
 
 ```shell
-sudo su
-./laserUSBtoSerial.sh
-exit
+sudo su -c "./laserUSBtoSerial.sh"
 ```
 
-alternatively, (preffered) set it as a startup script
+In order to avoid having to manually run the script, it is recommended to install it a `systemd` service that will run this script once at boot.
 
-/lib/systemd/system/laserUSBtoSerial.service
+We will create a `.service` file in the path `/lib/systemd/system/` called `laserUSBtoSerial.service` as follows (or download it from [here](./laserUSBtoSerial.service)):
 
-description here (complete it): https://www.freedesktop.org/software/systemd/man/systemd.service.html
-
-add as a file
-
-'''
+```shell
 [Unit]
 Description=Enable Coherent Laser USB-to-Serial
 
@@ -173,32 +164,39 @@ ExecStart=/home/pi/laserUSBtoSerial.sh
 
 [Install]
 WantedBy=multi-user.target
-'''
+```
 
+For the sake of brevity, the options specified in this `systemd.service` file will not be explained here. Instead, a page that gives in-depth explanations and usage examples of all the available options can be viewed [here](https://www.freedesktop.org/software/systemd/man/systemd.service.html).
+
+Once the file is created, its permsission will need to be changed to allow execution:
+
+```shell
 sudo chmod 744 laserUSBtoSerial.sh
+```
 
-then start it using
+Finally, the `.service` will need to be enabled:
 
-'''ShellSession
+```shell
 sudo systemctl enable laserUSBtoSerial.service
-'''
+```
 
-reboot
+At this point, the service should be set up to execute our script at boot. To test whether the service is configured properly, you can execute `sudo systemctl start laserUSBtoSerial` , or simply reboot the device. Then, check the status of the service using `sudo systemctl status laserUSBtoSerial` (the presence of any errors will be highlighted in red, and point to an incorrect setup of the serive).
 
 #### Python
-
 
 #### Pin Assignment
 
 <VERSION, PACKAGES>
 
-
 ### Laser
+
+The laser used in this project is the Coherent BioRay
 
 https://edge.coherent.com/assets/pdf/Coherent-BioRay-Operator-s-Manual.pdf
 
-<MODEL, DOCUMENTATION, CONTROLLER, USB-TO-SERIAL, ARDUINO???> <USB TO SERIAL HACK FOR LASER?>
+<MODEL, DOCUMENTATION, CONTROLLER, USB-TO-SERIAL, ARDUINO???>
 
+Talk about how the controller gets data etc
 
 ### Arduino
 
@@ -231,6 +229,7 @@ https://cdn-shop.adafruit.com/datasheets/mcp4725.pdf
 
 <SPECIFICATION> <DATA SHEET> <I2C>
 
+Pin assignement!
 
 #### Laser Modulation
 
@@ -242,20 +241,19 @@ Talk about physical and software maximums / minimums and why you should not cros
 
 http://www.ti.com/lit/ds/symlink/cd54hc32.pdf
 
-
 ### Camera
+
+add pin assignement section!
 
 https://www.alliedvision.com/fileadmin/content/documents/products/cameras/Manta/techman/Manta_TechMan.pdf
 
 
 ## The Software
 
-
 ### Server
 
 
 CRATE A FILE FROM THIS AND HOST IT, AND CLEAN IT UP, LIKE ABOVE
-
 
 '''
 [Unit]
@@ -280,14 +278,18 @@ WantedBy=multi-user.target
 
 ### Parser
 
-
 #### Table of Recognized Commands
-
 
 ### Error handler
 
-
 #### Table of Errors and Warnings
+
+| Error |      |      |
+| ----- | ---- | ---- |
+|       |      |      |
+|       |      |      |
+|       |      |      |
+
 
 
 ### Laser Serial Communication Script
@@ -313,8 +315,10 @@ changed compilation parameter to -O2 (talk about it) File --> Preferences --> Fo
 
 ## Licensing
 
-
 ## Author
 
+Talk about me quickly, mention contact details, give supervisor details as well
 
 ## Acknowledgements
+
+Same as pptx, + Hristo and Jess
