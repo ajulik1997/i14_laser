@@ -94,40 +94,66 @@ As the Pi is being used a server, it needs to be set up to run headless. This pr
 
 MORE GOES ON MONDAY
 
+Talk about SSH and SCP
+
 #### Drivers and Packages
 
 This section highlights the packages and drivers that need to be installed or set up, either as dependencies by the server, or optional add-ons for easier developement and set-up.
 
 ##### Flashing '.hex' files to Arduino
 
-As of Arduino 1.6, it is possible to develop Arduino applications directly on the Raspberry Pi, although this is not recommended, as the newly released Arduino CLI has too many dependencies (up to 1GB, including a desktop environment, which is not necessary on a headless Raspberry Pi) for a system with limited storage and memory. 
+As of Arduino 1.6, it is possible to develop Arduino applications directly on the Raspberry Pi, although this is not recommended, as the newly released Arduino CLI has too many dependencies (up to 1GB, including a desktop environment, which is not necessary on a headless Raspberry Pi) for a system with limited storage and memory. Instead, it is recomended that all Arduino developement is carried out elsewhere, and the compiled `.hex` can be sent to the Raspperry Pi via `scp`, then flashed onto the Arduino from the Raspberry Pi using `avrdude`.
 
-<TALK ABOUT DRIVER> <avrdude> <USB TO SERIAL HACK FOR LASER?>
+`avrdude` is a software for programming Atmel AVR controllers, such as the ATmega328 that is at the core of the Arduino Duo. At the time of writing, `avrdude` was available for download using `apt-get`:
 
---
-http://www.ladyada.net/learn/avr/avrdude.html
+```shell
+sudo apt-get install avrdude
+```
 
+Alternatively, you can download the latest source code from [here](http://download.savannah.gnu.org/releases/avrdude/), and compile from source.
+
+Flashing a `.hex` file can then be acomplished by running the following command, explained below:
+
+```shell
 sudo avrdude -p atmega328p -P /dev/ttyACM0 -c arduino -U flash:w:arduino.hex:i
---
+```
 
-create a shell script 'laserUSBtoSerial.sh' (alternatively, download it from [here](./laserUSBtoSerial.sh)
+- `sudo` to give `avrdude` permission to acces the USB device
+- `-p atmega328p` to select the part number of the microcontroller (atmega328p for my Arduino Uno)
+- `-P /dev/ttyACM0` to specify the communication port (change this if your Arduino is assigned a different port)
+- `-c arduino` to specifiy the programmer type (arduino is the safest option, but a different setting may be needed depending on your chip)
+- `-U flash:w:arduino.hex:i` is the command that does the actual programming
+  - `flash` is the memory type we are flashing
+  - `w` specifies write mode (which usualy also carries out a verify pass after flashing)
+  - `arduino.hex` is the filename of the `.hex` file we are flashing (change this to your filename)
+  - `i` specifies that this file has the “Intel Hex” format
 
-'''shell
+Many other options are also available, that may or not may be useful or necessary when doing your own deleopement. A nice tutorial that highlights all the important options can be found [here](http://www.ladyada.net/learn/avr/avrdude.html).
+
+##### Setting up USB laser as a Serial device
+
+When the laser is first plugged in to the Arduino, it is not recognised as a device capable of serial input/ouptut. Although the the laser uses a standard FTDI chip, its VID/PID is not one recognised by linux as a `ftdi_sio` device. Luckily, most modern Linux distributions (including Raspbian) have FTDI drivers built into their Kernel. 
+
+We start by creating a shell script `laserUSBtoSerial.sh` (alternatively, you can download it from [here](./laserUSBtoSerial.sh)):
+
+```shell
 #!/bin/bash
 modprobe ftdi_sio
 echo 0d4d 003d > /sys/bus/usb-serial/drivers/ftdi_sio/new_id
 udevadm control --reload && udevadm trigger
-'''
+```
 
-say what it does
+`modprobe` adds an `ftdi_sio` module into the Linux kernel. We insert the 
 
 needs to be run using 'su' as follows:
 
-'''ShellSession
+sudo su -c ‘command here’
+
+```shell
 sudo su
 ./laserUSBtoSerial.sh
 exit
-'''
+```
 
 alternatively, (preffered) set it as a startup script
 
