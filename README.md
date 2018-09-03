@@ -197,17 +197,25 @@ Pinout diagram, which pin is mapped where
 
 ### Laser
 
-The laser used in this project is the Coherent BioRay
+The laser used in this project is the [Coherent BioRay](https://www.coherent.com/lasers/laser/stingray-and-bioray-lasers) laser, controlled by a corresponding Coherent BioRay Controller unit, as specified in the [documentation](https://edge.coherent.com/assets/pdf/Coherent-BioRay-Operator-s-Manual.pdf).
 
-https://edge.coherent.com/assets/pdf/Coherent-BioRay-Operator-s-Manual.pdf
+The back panel of the controller unit has the following connectors (alternatively, see Figure 4-2. in the documentation):
 
-<MODEL, DOCUMENTATION, CONTROLLER, USB-TO-SERIAL, ARDUINO???>
+![Laser Controller](./resources/images/readme/laser_controller.PNG)
 
-Talk about how the controller gets data etc
+The controller unit receives power via the *Power In Connector*, and in turns supplies power to the laser via the *Laser Head Connector* into which the laser itself is connected. The *BNC connector* allows signals and waveforms to be sent to the laser controller, which will modulate the laser according to the following diagram (alternatively, Figure 2-1 in the documentation):
+
+![Laser Modulation Curve](./resources/images/readme/laser_modulation.PNG)
+
+The *Mini USB B* connector allows commands to be sent to the laser via RS-232 over USB. The laser supports many different commands for changing the settings or getting the status of the laser (full list can be seen as Table 5-1. in the documentation), most of which will not be used in this project. The Raspberry Pi communicates directly with the laser by sending and receiving serial data via a USB A to Mini USB B cable connected to the controller.
 
 ### Arduino
 
-An Arduino Uno (link) was used as a smart modulation controller for the laser. (maybe change)
+An [Arduino Uno](https://store.arduino.cc/arduino-uno-rev3) was used in this project as a smart modulation controller for the laser. This specific version was chosen due to its small size as well as the following features:
+
+- 5V operating voltage (same as the Raspberry Pi)
+- 14 digital input pins
+  - 6 hardware PWM pins 
 
 https://www.circuito.io/blog/arduino-uno-pinout/
 
