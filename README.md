@@ -184,7 +184,12 @@ At this point, the service should be set up to execute our script at boot. To te
 
 #### Python
 
+RPi.GPIO
+subprocess ?
+serial ?
+time ?
 What version? What packages?
+socket
 
 #### Pin Assignment
 
