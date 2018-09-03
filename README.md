@@ -89,7 +89,7 @@ According to our specification, the Raspberry Pi needs to be set up so that it c
 
 The operating system chosen for this project was [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/), an OS based on Debian Stretch with no desktop interface, chosen for its minimal footprint and high compatibility with Raspberry Pi. The required image was downloaded from the [official mirror](https://downloads.raspberrypi.org/raspbian_lite_latest), and written to a 16GB microSD card according to the [installation instructions](https://www.raspberrypi.org/documentation/installation/installing-images/README.md).
 
-As the Pi is being used a server, it needs to be set up to run headless. This process is described in detail [here](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md), but the most important step (activating SSH), can be accomplished by mounting the SD card on any Windows or 
+As the Pi is being used a server, it needs to be set up to run headless. This process is described in detail [here](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md), but the most important step (activating SSH), can be accomplished by mounting the SD card on any Windows or
 
 MORE GOES HERE ON MONDAY
 
@@ -97,11 +97,11 @@ Talk about SSH and SCP
 
 #### Drivers and Packages
 
-This section highlights the packages and drivers that need to be installed or set up, either as dependencies by the server, or optional add-ons for easier developement and set-up.
+This section highlights the packages and drivers that need to be installed or set up, either as dependencies by the server, or optional add-ons for easier development and set-up.
 
 ##### Flashing '.hex' files to Arduino
 
-As of Arduino 1.6, it is possible to develop Arduino applications directly on the Raspberry Pi, although this is not recommended, as the newly released Arduino CLI has too many dependencies (up to 1GB, including a desktop environment, which is not necessary on a headless Raspberry Pi) for a system with limited storage and memory. Instead, it is recomended that all Arduino developement is carried out elsewhere, and the compiled `.hex` can be sent to the Raspperry Pi via `scp`, then flashed onto the Arduino from the Raspberry Pi using `avrdude`.
+As of Arduino 1.6, it is possible to develop Arduino applications directly on the Raspberry Pi, although this is not recommended, as the newly released Arduino CLI has too many dependencies (up to 1GB, including a desktop environment, which is not necessary on a headless Raspberry Pi) for a system with limited storage and memory. Instead, it is recommended that all Arduino development is carried out elsewhere, and the compiled `.hex` can be sent to the Raspberry Pi via `scp`, then flashed onto the Arduino from the Raspberry Pi using `avrdude`.
 
 `avrdude` is a software for programming Atmel AVR controllers, such as the ATmega328 that is at the core of the Arduino Duo. At the time of writing, `avrdude` was available for download using `apt-get`:
 
@@ -111,27 +111,27 @@ sudo apt-get install avrdude
 
 Alternatively, you can download the latest source code from [here](http://download.savannah.gnu.org/releases/avrdude/), and compile from source.
 
-Flashing a `.hex` file can then be acomplished by running the following command, explained below:
+Flashing a `.hex` file can then be accomplished by running the following command, explained below:
 
 ```shell
 sudo avrdude -p atmega328p -P /dev/ttyACM0 -c arduino -U flash:w:arduino.hex:i
 ```
 
-- `sudo` to give `avrdude` permission to acces the USB device
+- `sudo` to give `avrdude` permission to access the USB device
 - `-p atmega328p` to select the part number of the microcontroller (atmega328p for my Arduino Uno)
 - `-P /dev/ttyACM0` to specify the communication port (change this if your Arduino is assigned a different port)
-- `-c arduino` to specifiy the programmer type (arduino is the safest option, but a different setting may be needed depending on your chip)
+- `-c arduino` to specify the programmer type (`arduino` is the safest option, but a different setting may be needed depending on your chip)
 - `-U flash:w:arduino.hex:i` is the command that does the actual programming
   - `flash` is the memory type we are flashing
-  - `w` specifies write mode (which usualy also carries out a verify pass after flashing)
+  - `w` specifies write mode (which usually also carries out a verify pass after flashing)
   - `arduino.hex` is the filename of the `.hex` file we are flashing (change this to your filename)
   - `i` specifies that this file has the “Intel Hex” format
 
-Many other options are also available, that may or not may be useful or necessary when doing your own deleopement. A nice tutorial that highlights all the important options can be found [here](http://www.ladyada.net/learn/avr/avrdude.html).
+Many other options are also available, that may or not may be useful or necessary when doing your own development. A nice tutorial that highlights all the important options can be found [here](http://www.ladyada.net/learn/avr/avrdude.html).
 
 ##### Setting up USB laser as a Serial device
 
-When the laser is first plugged in to the Arduino, it is not recognised as a device capable of serial input/ouptut. Although the the laser uses a standard FTDI chip, its VID/PID is not one recognised by linux as a `ftdi_sio` device. Luckily, most modern Linux distributions (including Raspbian) have FTDI drivers built into their Kernel. 
+When the laser is first plugged in to the Arduino, it is not recognised as a device capable of serial input/output. Although the laser uses a standard FTDI chip, its VID/PID is not one recognised by Linux as a `ftdi_sio` device. Luckily, most modern Linux distributions (including Raspbian) have FTDI drivers built into their Kernel.
 
 We start by creating a shell script `laserUSBtoSerial.sh` (alternatively, you can download it from [here](./laserUSBtoSerial.sh)):
 
@@ -142,7 +142,7 @@ echo 0d4d 003d > /sys/bus/usb-serial/drivers/ftdi_sio/new_id
 udevadm control --reload && udevadm trigger
 ```
 
-`modprobe` adds an `ftdi_sio` module into the Linux kernel. Using `echo`, we then insert the Vendor ID (`0d4d` - registered by Coherent) and the Product ID (`003d` - specific to this laser model) into a file newly created by `modprobe`. This allows the kernel to associate a device that identifies itself using that VID/PID combination (our laser) with the relevant FTDI driver. Finally, for a change to be detected by the kernel, the USB device needs to unplugged (if it is plugged in), and replugged. If physical access to the device is not available as expected, `udevadm` is used to reload the udev rules and trigger a USB replug event.
+`modprobe` adds an `ftdi_sio` module into the Linux kernel. Using `echo`, we then insert the Vendor ID (`0d4d` - registered by Coherent) and the Product ID (`003d` - specific to this laser model) into a file newly created by `modprobe`. This allows the kernel to associate a device that identifies itself using that VID/PID combination (our laser) with the relevant FTDI driver. Finally, for a change to be detected by the kernel, the USB device needs to unplugged (if it is plugged in), and re-plugged. If physical access to the device is not available as expected, `udevadm` is used to reload the udev rules and trigger a USB plug-in event.
 
 This script needs to be executed with superuser privileges after every reboot:
 
@@ -168,7 +168,7 @@ WantedBy=multi-user.target
 
 For the sake of brevity, the options specified in this `systemd.service` file will not be explained here. Instead, a page that gives in-depth explanations and usage examples of all the available options can be viewed [here](https://www.freedesktop.org/software/systemd/man/systemd.service.html).
 
-Once the file is created, its permsission will need to be changed to allow execution:
+Once the file is created, its permission will need to be changed to allow execution:
 
 ```shell
 sudo chmod 744 laserUSBtoSerial.sh
@@ -180,7 +180,7 @@ Finally, the `.service` will need to be enabled:
 sudo systemctl enable laserUSBtoSerial.service
 ```
 
-At this point, the service should be set up to execute our script at boot. To test whether the service is configured properly, you can execute `sudo systemctl start laserUSBtoSerial` , or simply reboot the device. Then, check the status of the service using `sudo systemctl status laserUSBtoSerial` (the presence of any errors will be highlighted in red, and point to an incorrect setup of the serive).
+At this point, the service should be set up to execute our script at boot. To test whether the service is configured properly, you can execute `sudo systemctl start laserUSBtoSerial` , or simply reboot the device. Then, check the status of the service using `sudo systemctl status laserUSBtoSerial` (the presence of any errors will be highlighted in red, and point to an incorrect setup of the service).
 
 #### Python
 
@@ -224,11 +224,11 @@ https://www.sparkfun.com/datasheets/Components/BC546.pdf
 |          Booting           |       Green       |      RGB cycle       |           The device is in the process of booting            |
 |           Ready            |       Green       |         Off          |   The device is ready and waiting to receive instructions    |
 |      Lasing (normal)       |       Green       |  Blue (continuous)   | The device is device is modulating the laser with a non-zero amplitude continuous wave, sine wave, triangle wave or sawtooth wave |
-|      Lasing (pulsed)       |       Green       |  Blue (interminent)  | The device is modulating the laser with a square wave or a pulse train, where the RGB LED will be illuminated synchronously with the laser |
-|        Calibrating         |       Green       | Magenta (continuous) | The device is undergoing a calibration pass after it has received new wave paramters. |
+|      Lasing (pulsed)       |       Green       |  Blue (intermittent)  | The device is modulating the laser with a square wave or a pulse train, where the RGB LED will be illuminated synchronously with the laser |
+|        Calibrating         |       Green       | Magenta (continuous) | The device is undergoing a calibration pass after it has received new wave parameters. |
 |       Receiving data       |       Green       |  Green (continuous)  | The device is receiving or parsing data received from an attached serial device |
-|   Safety Interlock Open    |       Green       |   Red (continous)    | The device detected that the safety interlock is open and is not being manually overriden, therefore laser modulation has been temporarily disabled. |
-| Safety Interlock Overriden |       Green       | Orange (interminent) | The device detected that the safety interlock is open but it is being manually override. Laser modulation is enabled but an audible warning will sound (if enabled) synchronously with the orange warning light. |
+|   Safety Interlock Open    |       Green       |   Red (continuous)    | The device detected that the safety interlock is open and is not being manually overridden, therefore laser modulation has been temporarily disabled. |
+| Safety Interlock Overridden |       Green       | Orange (intermittent) | The device detected that the safety interlock is open but it is being manually override. Laser modulation is enabled but an audible warning will sound (if enabled) synchronously with the orange warning light. |
 
 <LIST OF ASSIGNED PINS> <WIRING DIAGRAM>
 
@@ -244,7 +244,7 @@ https://cdn-shop.adafruit.com/datasheets/mcp4725.pdf
 
 <SPECIFICATION> <DATA SHEET> <I2C>
 
-Pin assignement!
+Pin assignment!
 
 #### Laser Modulation
 
@@ -258,7 +258,7 @@ http://www.ti.com/lit/ds/symlink/cd54hc32.pdf
 
 ### Camera
 
-add pin assignement section!
+add pin assignment section!
 
 https://www.alliedvision.com/fileadmin/content/documents/products/cameras/Manta/techman/Manta_TechMan.pdf
 
