@@ -184,9 +184,11 @@ At this point, the service should be set up to execute our script at boot. To te
 
 #### Python
 
+What version? What packages?
+
 #### Pin Assignment
 
-<VERSION, PACKAGES>
+Pinout diagram, which pin is mapped where
 
 ### Laser
 
@@ -200,22 +202,35 @@ Talk about how the controller gets data etc
 
 ### Arduino
 
+An Arduino Uno (link) was used as a smart modulation controller for the laser. (maybe change)
+
 https://www.circuito.io/blog/arduino-uno-pinout/
 
 <MODEL, STORAGE, MEMORY>
+
+(move down to software probably)
 
 <MODES OF OPERATION, MODES OF MODULATION>
 
 https://www.sparkfun.com/datasheets/Components/BC546.pdf
 
-
 #### Pin Assignment
-
 
 #### LED Signalling
 
-<LIST OF ASSIGNED PINS> <WIRING DIAGRAM>
+|           Status           | Power LED (green) |   Status LED (RGB)   |                         Description                          |
+| :------------------------: | :---------------: | :------------------: | :----------------------------------------------------------: |
+|         Power off          |        Off        |         Off          |   The device is not receiving power or is being programmed   |
+|          Booting           |       Green       |      RGB cycle       |           The device is in the process of booting            |
+|           Ready            |       Green       |         Off          |   The device is ready and waiting to receive instructions    |
+|      Lasing (normal)       |       Green       |  Blue (continuous)   | The device is device is modulating the laser with a non-zero amplitude continuous wave, sine wave, triangle wave or sawtooth wave |
+|      Lasing (pulsed)       |       Green       |  Blue (interminent)  | The device is modulating the laser with a square wave or a pulse train, where the RGB LED will be illuminated synchronously with the laser |
+|        Calibrating         |       Green       | Magenta (continuous) | The device is undergoing a calibration pass after it has received new wave paramters. |
+|       Receiving data       |       Green       |  Green (continuous)  | The device is receiving or parsing data received from an attached serial device |
+|   Safety Interlock Open    |       Green       |   Red (continous)    | The device detected that the safety interlock is open and is not being manually overriden, therefore laser modulation has been temporarily disabled. |
+| Safety Interlock Overriden |       Green       | Orange (interminent) | The device detected that the safety interlock is open but it is being manually override. Laser modulation is enabled but an audible warning will sound (if enabled) synchronously with the orange warning light. |
 
+<LIST OF ASSIGNED PINS> <WIRING DIAGRAM>
 
 ### Digital to Analog Converter
 
@@ -284,11 +299,13 @@ WantedBy=multi-user.target
 
 #### Table of Errors and Warnings
 
-| Error |      |      |
-| ----- | ---- | ---- |
-|       |      |      |
-|       |      |      |
-|       |      |      |
+(change to table of return codes?) (change warnings to stackable! 01+02+04 (up to 16?))
+
+| Return Code | Return Code type |                         Description                          | More details given? |
+| :---------: | :--------------: | :----------------------------------------------------------: | :-----------------: |
+|     00      |     SUCCESS      |   The requested action completed without error or warning    |         No          |
+|     01      |     WARNING      | The requested action was not carried out as it would have no effect |         No          |
+|             |                  |                                                              |                     |
 
 
 
