@@ -211,23 +211,85 @@ The *Mini USB B* connector allows commands to be sent to the laser via RS-232 ov
 
 ### Arduino
 
-An [Arduino Uno](https://store.arduino.cc/arduino-uno-rev3) was used in this project as a smart modulation controller for the laser. This specific version was chosen due to its small size as well as the following features:
+The Arduino used in this project is the [Arduino Uno](https://store.arduino.cc/arduino-uno-rev3), used as a smart modulation controller for the laser described above. This specific Arduino was chosen due to its small size as well as the following features:
 
 - 5V operating voltage (same as the Raspberry Pi)
-- 14 digital input pins
-  - 6 hardware PWM pins 
+- 14 digital I/O pins (6 are hardware PWM output pins)
+- 6 analog input pins
+- 32KB of Flash Memory
+- 2KB of SRAM
+- 16MHz clock speed
 
-https://www.circuito.io/blog/arduino-uno-pinout/
+According to our specification, the Arduino will need to be setup up to be able to do the following:
 
-<MODEL, STORAGE, MEMORY>
+- receive Serial messages from the Raspberry Pi
+- read GPIO pins to determine the modulation mode and operation mode
+- send I2C data to a connected DAC
+- generate waveforms of different shape, amplitude and frequency
+  - allow all waveforms to trigger camera at a user-defined threshold
+  - allow some waveforms to be triggered by a camera
+- signal status using LED and piezo buzzer
+- detect (hardware and software) the breaking of the safety interlock
+- visually and audibly warn when overriding the safety interlock
 
-(move down to software probably)
+#### Pin Assignment
 
-<MODES OF OPERATION, MODES OF MODULATION>
+This section will describe what every pin on the Arduino will be set up to do, as well as how the Arduino will be wired with other components. A very nice diagram of the full Arduino pinout can be seen on [circuito.io](https://www.circuito.io/blog/arduino-uno-pinout/), from which I have taken snippets and included below.
+
+The Arduino has 14 digital IO pins, marked as 0 to 13 in purple on the diagram below:
+
+![Arduino Digital IO Pins](./resources/images/readme/arduino_digital.jpg)
+
+The assignment of these digital pins is summarized as follows:
+
+| Pin Number |        Assignment       | Input/Output/PWM |                              Description                              |
+|:----------:|:------------------------:|:----------------:|:---------------------------------------------------------------------:|
+|      0     |        UNASSIGNED        |                  |              Used by the Arduino for serial communication             |
+|      1     |        UNASSIGNED        |                  |              Used by the Arduino for serial communication             |
+|      2     |       LASER TRIGGER      |       INPUT      |     Enables connected camera to trigger laser pulses when exposing    |
+|      3     |      CAMERA TRIGGER      |      OUTPUT      | Enables laser to synchronise camera shutter with a generated waveform |
+|      4     | MODULATION MODE SELECTOR |       INPUT      |          Activates one of the preprogramed modulation modes          |
+|      5     |         POWER LED        |        PWM       |                 Controls intensity of green power LED                 |
+|      6     |          BUZZER          |        PWM       |                        Controls tone of buzzer                        |
+|      7     | MODULATION MODE SELECTOR |       INPUT      |          Activates one of the preprogramed modulation modes          |
+|      8     | MODULATION MODE SELECTOR |       INPUT      |          Activates one of the preprogramed modulation modes          |
+|      9     |         [R]GB LED        |        PWM       |              Controls intensity of red colour in RGB LED              |
+|     10     |         RG[B] LED        |        PWM       |              Controls intensity of blue colour in RGB LED             |
+|     11     |         R[G]B LED        |        PWM       |             Controls intensity of green colour in RGB LED             |
+|     12     |        UNASSIGNED        |                  |                                 Unused                                |
+|     13     |        UNASSIGNED        |                  |                          Used by built-in LED                         |
+
+The Arduino also has 6 analog input pins, marked as A0 to A5 in green on the diagram below:
+
+![Arduino Analog IO Pins](./resources/images/readme/arduino_analog.jpg)
+
+The assignment of the analog pins is summarised by the following table:
+
+| Pin Number |       Assignment       |                      Description                     |
+|:----------:|:-----------------------:|:----------------------------------------------------:|
+|     A0     | OPERATION MODE SELECTOR |   Activates one of the preprogramed operation modes  |
+|     A1     | OPERATION MODE SELECTOR |   Activates one of the preprogramed operation modes  |
+|     A2     |    INTERLOCK MONITOR    |      Monitors the status of the safety interlock     |
+|     A3     |     OVERRIDE MONITOR    | Monitors the status of the safety interlock override |
+|     A4     |        UNASSIGNED       |         Used by Arduino for I2C communication        |
+|     A5     |        UNASSIGNED       |         Used by Arduino for I2C communication        |
+
+It is important to note that:
+- For any digital pin, the Arduino defines voltages below 0.8V as LOW and voltages above 2V as HIGH. If any digital input pin has a voltage between 0.8V and 2V, its state is "undefined". That is why it is important to use **pull-down resistors** (or pull-up resistors, but none have been used in this project), to make sure the pin is pulled down below 0.8V when no voltage is applied, so the pin can be read as LOW.
+- The recommended maximum current that a single pin can take/provide is 20mA.
+- The absolute maximum current that all pins can take/provide together is 200mA.
+
+##### Resetting Arduino
+
+The 
 
 https://www.sparkfun.com/datasheets/Components/BC546.pdf
 
-#### Pin Assignment
+
+
+(add safety section here!)
+
+talk about one resistor
 
 #### LED Signalling
 
@@ -257,6 +319,8 @@ https://cdn-shop.adafruit.com/datasheets/mcp4725.pdf
 
 <SPECIFICATION> <DATA SHEET> <I2C>
 
+resume to a safe state
+
 Pin assignment!
 
 #### Laser Modulation
@@ -264,8 +328,6 @@ Pin assignment!
 <Oscilloscope>
 
 Talk about physical and software maximums / minimums and why you should not cross them (show borderline cases)
-
-(add safety section here!)
 
 http://www.ti.com/lit/ds/symlink/cd54hc32.pdf
 
@@ -335,6 +397,10 @@ https://linux.die.net/man/1/stty
 
 
 #### Arduino Controller Script (C for AVR)
+
+At the core of the Arduino Uno lies the Atmel ATmega328p microcontroller.
+
+<MODES OF OPERATION, MODES OF MODULATION>
 
 talk about why I had to replace the Wire library
 
