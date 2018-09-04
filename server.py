@@ -15,7 +15,7 @@ import atexit                           ## gracefully close at exit
 from datetime import datetime           ## UTC time for logging purposes
 from threading import Thread            ## for threaded server
 from externalParser import parse        ## EXTERNAL RULEBOOK
-from errors import errno                ## EXTERNAL ERROR DICTIONARY
+from errors import return_code          ## EXTERNAL RETURN CODE DICTIONARY
 
 ##### LOGGING AND RECOVERY DETECTION ##########################################
 
@@ -50,37 +50,37 @@ except socket.error as error:
 def handleResponse(data):
     '''
     Simple function that tests the valid of received data before parsing
-    
+
     Arguments:
         data <str> - data received from socket to be tested
-    
+
     Returns:
         Resulting string from parsed and executed arguments
         Error codes (see local file errors.txt)
     '''
-    if len(data) <= 2: return errno('10')
-    if len(data) >= 128: return errno('11')
-    if data[-2:] != '\r\n': return errno('12')
-    
+    if len(data) <= 2: return return_code('10')
+    if len(data) >= 128: return return_code('11')
+    if data[-2:] != '\r\n': return return_code('12')
+
     words = [word for word in data[:-2].split(' ') if len(word) != 0]
-    if len(words) == 0: return errno('13')
-    if len(words) >= 8: return errno('14')
+    if len(words) == 0: return return_code('13')
+    if len(words) >= 8: return return_code('14')
     
     return parse(words)
 
 ##### THREADED SERVER #########################################################
-    
+
 class connection(Thread):
     '''Simple threaded server derived from Thread class'''
     def __init__(self, socket, address):
         '''
         Init function for threaded server
-        
+
         Arguments:
             self <connection> - reference to the current instance of the class
             socket <socket.socket> - reference to the opened socket
             address <tuple> - address and port number of incoming connection
-        
+
         Returns:
             none
         '''

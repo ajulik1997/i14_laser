@@ -9,7 +9,7 @@
 
 ### CREATE UNIVERSAL ERROR HANDLER, DEPENDING ON TYPE, PRINTS APPROPRIATE ERROR
 
-def return_code(list):
+def return_code(obj):
     '''
     RETURNS MESSAGE FROM RETURN CODE
     Note:   Messages marked with {+++} are likely to return a more descriptive
@@ -21,48 +21,43 @@ def return_code(list):
 
     return_codes = {
         ##### 00 : SUCCESS ########################################################
-        "00" : b'00 : Completed without errors',                        # {+++}
+        "00" : '00 : Completed without errors',                             # {+++}
         ##### 0X : SUCCESS WITH WARNINGS ##########################################
-        "01" : b'01 : Command has no effect',                           # {&&&}
-        "02" : b'02 : One or more of the arguments were out of range',  # {&&&}
-        "09" : b'09 : Safety interlock override is on',                 # {&&&}
+        "01" : '01 : Command has no effect',                                # {&&&}
+        "02" : '02 : One or more of the arguments were out of range',       # {&&&}
+        "09" : '09 : Safety interlock override is on',                      # {&&&}
         ##### 1X : MESSAGE ERRORS #################################################
-        "10" : b'10 : Received message is too short or contains no data',
-        "11" : b'11 : Received message is too long and cannot be parsed',
-        "12" : b'12 : Received message is not terminated correctly',
-        "13" : b'13 : Received message contains no commands',
-        "14" : b'14 : Received message contains too many arguments',
+        "10" : '10 : Received message is too short or contains no data',
+        "11" : '11 : Received message is too long and cannot be parsed',
+        "12" : '12 : Received message is not terminated correctly',
+        "13" : '13 : Received message contains no commands',
+        "14" : '14 : Received message contains too many arguments',
         ##### 2X : PARSING ERRORS #################################################
-        "20" : b'20 : Command not recognized',
-        "21" : b'21 : Not enough arguments provided for this command',
-        "22" : b'22 : Too may arguments provided for this command',
-        "23" : b'23 : One or more provided argument(s) not recognized',
-        "24" : b'24 : One or more provided argument(s) are not of expected type',
-        "25" : b'25 : One or more provided argument(s) are not in range',
+        "20" : '20 : Command not recognized',
+        "21" : '21 : Not enough arguments provided for this command',
+        "22" : '22 : Too may arguments provided for this command',
+        "23" : '23 : One or more provided argument(s) not recognized',
+        "24" : '24 : One or more provided argument(s) are not of expected type',
+        "25" : '25 : One or more provided argument(s) are not in range',
         ##### 3X : TTY PORT ERRORS ################################################
-        "30" : b'30 : Unexpected TTY port error',                       # {+++}
-        "31" : b'31 : Unable to connect to specified TTY port',         # {+++}
-        "32" : b'32 : A timeout occurred when reading from TTY port',
-        "33" : b'33 : Laser returned an error while executing command', # {+++}
-		"34" : b'34 : Arduino returned an unexpected response',
+        "30" : '30 : Unexpected TTY port error',                            # {+++}
+        "31" : '31 : Unable to connect to specified TTY port',              # {+++}
+        "32" : '32 : A timeout occurred when reading from TTY port',
+        "33" : '33 : Laser returned an error while executing command',      # {+++}
+		"34" : '34 : Arduino returned an unexpected response',              # {+++}
+        "35" : '35 : Unable to edit TTY settings for Arduino compatibility',# {+++}
         ##### 4X : I2C ERRORS #####################################################
-        "40" : b'40 : Unable to connect to I2C device',                 # {+++}
+        "40" : '40 : Unable to connect to I2C device',                      # {+++}
         ##### 9X : SAFETY ERRORS ##################################################
-        "90" : b'90 : Safety interlock is open'
+        "90" : '90 : Safety interlock is open'
         ###########################################################################
     }
 
-    return return_codes.get(list[0], b'?? : An unknown error code was returned')
-           + ' : ' + str(list[2]) + '\r\n'
+    if type(obj) is str:
+        message = return_codes.get(obj, '?? : An unknown error code was returned')
 
-def warn_parse(list):																	## REVISIT
-    '''HANDLES RETURNS WHERE IT IS POSSIBLE FOR MANY WARNINGS TO OCCUR'''
+    if type(obj) is list:
+        message = return_codes.get(obj[0], '?? : An unknown error code was returned')
+        message += ' : ' + str(obj[1])
 
-    if len(list) == 0: return errno('00')
-    if len(list) == 1: return errno(list[0])
-    return (' '.join(list)+'\r\n').encode(encoding='ascii')
-
-def descriptive_err(errno, description):
-	'''HANDLES ERRORS THAT PROVIDE A ADDITIONAL INFORMATION'''
-
-	return (errno+' : '+str(description)+'\r\n').encode(encoding='ascii')
+    return (message+'\r\n').encode(encoding='ascii')

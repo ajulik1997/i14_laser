@@ -11,17 +11,17 @@
 
 import RPi.GPIO as GPIO                 ## for GPIO control
 from BioRay import laser                ## EXTERNAL BIORAY SERIAL CONTROLLER
-from errors import errno, warn_parse    ## EXTERNAL ERROR DICTIONARY   ## change this!
-from MCP4725 import intensity           ## EXTERNAL DAC CONTROLLER     ## remove this!
-from arduino import *					## Arduino laser controller   ## get rid of star *
+from errors import return_code          ## EXTERNAL RETURN CODE DICTIONARY
+import arduino					        ## Arduino laser controller
 
 ##### GLOBAL VARS #############################################################
 
 LASER_POWER = 0                 ## reset laser power to zero
 LASER_MODE = 'indep'            ## reset laser mode to independent operation
-LASER_MODULATION = 'full'       ## reset modulation to full (no modulation)
-LASER_MODULATION_FREQ = 1       ## reset modulation frequency to default
-LASER_MODULATION_DUTY = 50      ## reset modulation duty to default
+LASER_MODULATION = 'none'       ## reset modulation to none (no modulation)
+LASER_MODULATION_PERIOD = 0     ## reset modulation period to default
+LASER_MODULATION_DELAY = 0      ## reset modulation LASER_MODULATION_DELAY to default
+LASER_TRIGGER_THRESHOLD = 50    ## reset camera trigger threshold to default
 
 STRICT_MODE = True
 
@@ -85,7 +85,7 @@ def argument_check(test_args, known_args):
 def query(list):
     '''HANDLES ALL LASER QUERY RESPONSES'''
 
-    if list[0] != '00': return errno(list[0])
+    if list[0] != '00': return return_code(list[0])
     return (list[1]+'\r\n').encode(encoding='ascii')
 
 ##### COMMAND HANDLER #########################################################
@@ -108,8 +108,8 @@ def laser_mains_CMD(args):
     i_check = interlock_check()
     warn_list = []
 
-    if a_check != '00': return errno(a_check)   ## arguments are not good
-    if i_check == '90': return errno(i_check)   ## ilock open, override off
+    if a_check != '00': return return_code(a_check)   ## arguments are not good
+    if i_check == '90': return return_code(i_check)   ## ilock open, override off
     if i_check == '09': warn_list.append('09')  ## append override warning if on
 
     ## add warning and do nothing if laser is already on/off
@@ -136,16 +136,16 @@ def laser_power_CMD(args):																### WILL BE DONE OVER ARDUINO NOW
     i_check = interlock_check()
     warn_list = []
 
-    if a_check != '00' or a_check != '02': return errno(a_check)   ## arguments are not good
+    if a_check != '00' or a_check != '02': return return_code(a_check)   ## arguments are not good
     if a_check == '02': return
-    if i_check == '90': return errno(i_check)   ## ilock open, override off
+    if i_check == '90': return return_code(i_check)   ## ilock open, override off
     if i_check == '09': warn_list.append('09')  ## append override warning if on
 
     ## add warning and do nothing if laser power already set to wanted value
     if args[0] == LASER_POWER: warn_list.append('01')
     else: ## set laser power
         result = intensity(args[0])
-        if result != '00': return errno(result)
+        if result != '00': return return_code(result)
 
     return warn_parse(warn_list)
 
@@ -274,4 +274,4 @@ def parse(args):
 		'STRICT_MODE'		  : strict_mode_CMD(),
 		'?STRICT_MODE'		  : strict_mode_QUERY()
     }
-    return rulebook.get(args[0], errno('20'))
+    return rulebook.get(args[0], return_code('20'))
