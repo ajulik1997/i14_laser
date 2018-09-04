@@ -91,7 +91,31 @@ According to our specification, the Raspberry Pi needs to be set up so that it c
 
 The operating system chosen for this project was [Raspbian Stretch Lite](https://www.raspberrypi.org/downloads/raspbian/), an OS based on Debian Stretch with no desktop interface, chosen for its minimal footprint and high compatibility with Raspberry Pi. The required image was downloaded from the [official mirror](https://downloads.raspberrypi.org/raspbian_lite_latest), and written to a 16GB microSD card according to the [installation instructions](https://www.raspberrypi.org/documentation/installation/installing-images/README.md).
 
-As the Pi is being used a server, it needs to be set up to run headless. This process is described in detail [here](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md), but the most important step (activating SSH), can be accomplished by mounting the SD card on any Windows or
+As the Pi is being used a server, it needs to be set up to run headless. This process is described in detail [here](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md), but the most important step (activating SSH), can be accomplished by mounting the boot partition of the SD card on any device and creating an empty file with the filename `ssh`. The contents of this file does not matter, as it will be deleted on boot, and SSH should be activated. Alternatively, it is possible to do the initial setup with an attached monitor and keyboard. Note that, on some networks, the MAC address of the Raspberry Pi will first need to be registered before any network communication can take place. In this scenario, using a monitor and keyboard initially is the easiest option.
+
+Once it is possible to interface with the Raspberry Pi, either over SSH or physically, the Raspberry Pi configuration tool will need to be launched using:
+
+```shell
+sudo raspi-config
+```
+
+You will be presented with a terminal user interface (TUI) similar to the one below:
+
+![raspi-config](resources\images\readme\raspi-config.PNG)
+
+The settings that will be changed are:
+  - **Change User Password**: change the user password so that it is not possible to start an SSH session with the Raspberry Pi using the default password
+  - **Network Options**:
+    - **Hostname**: change the name that the Raspberry Pi identifies itself as on the network (default is `raspberrypi`)
+  - **Interfacing Options**:
+    - **Camera**: disable the CSI camera interface as we are not using it
+    - **SSH**: enable the SSH interface if you have not done so already
+    - **VNC**: disable the VNC as we are not running a desktop environment
+    - **SPI**: disable the SPI interface and automatic loading of the SPI kernel module as we are not using it
+    - **I2C**: disable the I2C interface and automatic loading of the I2C kernel module as we are not using it
+    - **1-Wire** : disable the 1-Wire interface as we are not using it
+
+
 
 MORE GOES HERE ON MONDAY
 
