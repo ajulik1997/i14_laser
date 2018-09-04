@@ -14,10 +14,12 @@ The following documentation is designed as a guide to simplify the processes of 
     - [Drivers and Packages](#drivers-and-packages)
     - [Python](#python)
     - [Pin Assignment](#pin-assignment)
+    - [Wiring Diagram](#wiring-diagram)
   - [Laser](#laser)
   - [Arduino](#arduino)
     - [Pin Assignment](#pin-assignment)
-  - [LED Signalling](#led-signalling)
+    - [LED Signalling](#led-signalling)
+    - [Wiring Diagram](#wiring-diagram)
   - [Digital to Analog Converter](#digital-to-analog-converter)
     - [Laser modulation](#laser-modulation)
   - [Camera](#camera)
@@ -195,6 +197,8 @@ socket
 
 Pinout diagram, which pin is mapped where
 
+#### Wiring Diagram
+
 ### Laser
 
 The laser used in this project is the [Coherent BioRay](https://www.coherent.com/lasers/laser/stingray-and-bioray-lasers) laser, controlled by a corresponding Coherent BioRay Controller unit, as specified in the [documentation](https://edge.coherent.com/assets/pdf/Coherent-BioRay-Operator-s-Manual.pdf).
@@ -261,7 +265,7 @@ The assignment of these digital pins is summarized as follows:
 
 The Arduino also has 6 analog input pins, marked as A0 to A5 in green on the diagram below:
 
-![Arduino Analog IO Pins](./resources/images/readme/arduino_analog.jpg)
+![Arduino Analog Input Pins](./resources/images/readme/arduino_analog.jpg)
 
 The assignment of the analog pins is summarised by the following table:
 
@@ -275,23 +279,21 @@ The assignment of the analog pins is summarised by the following table:
 |     A5     |        UNASSIGNED       |         Used by Arduino for I2C communication        |
 
 It is important to note that:
-- For any digital pin, the Arduino defines voltages below 0.8V as LOW and voltages above 2V as HIGH. If any digital input pin has a voltage between 0.8V and 2V, its state is "undefined". That is why it is important to use **pull-down resistors** (or pull-up resistors, but none have been used in this project), to make sure the pin is pulled down below 0.8V when no voltage is applied, so the pin can be read as LOW.
+- For any digital pin, the Arduino defines voltages below 0.8V as LOW and voltages above 2V as HIGH. If any digital input pin has a voltage between 0.8V and 2V, its state is "undefined". That is why it is important to use **pull-down resistors** (or pull-up resistors, but none have been used in this project), to make sure the pin is pulled down below 0.8V when no voltage is applied, so the pin can be read as LOW. The pull-down resistors used in the project are all 2.2 kohm.
 - The recommended maximum current that a single pin can take/provide is 20mA.
 - The absolute maximum current that all pins can take/provide together is 200mA.
 
 ##### Resetting Arduino
 
-The 
+It will sometimes be necessary to bring the Arduino back to a "known safe state", for example after a power loss of the Raspberry Pi, the internal variables of the server will need to be reinitialised and match those on the Arduino. We do this by connecting the "RESET" pin on the Arduino (see image below) to an NPN Transistor (for example, [this one](https://www.sparkfun.com/datasheets/Components/BC546.pdf)). The *collector* of the transistor would connect to the RESET pin, while the *emitter* would be connected to ground. The *base* of the transistor will be set up to connect to a pin on the Raspberry Pi, which can then trigger the reset of the Arduino.
 
-https://www.sparkfun.com/datasheets/Components/BC546.pdf
+![Arduino Reset Pin](./resources/images/readme/arduino_reset.jpg)
 
-
-
-(add safety section here!)
-
-talk about one resistor
+It is important to note that, when the transistor is *saturated* (see [here](https://learn.sparkfun.com/tutorials/transistors/operation-modes)), it is essentially acting like a short-circuit and therefore damaging the transistor as well as the GPIO pin on the Raspberry Pi. Therefore, an appropriate resistor needs to be wired between the transistor *base* and the GPIO pin (I have used the same resistor as those used for pull-down).
 
 #### LED Signalling
+
+A green "power" LED as well as an RGB "status" LED is used to signal different events or states that the Arduino is in. The list of all possible colour combinations, as well as their meaning, can be seen in this table:
 
 |           Status           | Power LED (green) |   Status LED (RGB)   |                         Description                          |
 | :------------------------: | :---------------: | :------------------: | :----------------------------------------------------------: |
@@ -307,6 +309,8 @@ talk about one resistor
 
 <LIST OF ASSIGNED PINS> <WIRING DIAGRAM>
 
+#### Wiring Diagram
+
 ### Digital to Analog Converter
 
 https://www.adafruit.com/product/935
@@ -320,6 +324,8 @@ https://cdn-shop.adafruit.com/datasheets/mcp4725.pdf
 <SPECIFICATION> <DATA SHEET> <I2C>
 
 resume to a safe state
+
+(add safety section here!)
 
 Pin assignment!
 
