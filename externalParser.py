@@ -12,7 +12,7 @@
 import RPi.GPIO as GPIO                 ## for GPIO control
 from BioRay import laser                ## EXTERNAL BIORAY SERIAL CONTROLLER
 from errors import return_code          ## EXTERNAL RETURN CODE DICTIONARY
-import arduino					        ## Arduino laser controller
+import arduino                            ## Arduino laser controller
 
 ##### GLOBAL VARS #############################################################
 
@@ -32,15 +32,9 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 GPIO.setup([4,17], GPIO.IN) ## 4: INTERLOCK; 17: INTERLOCK_OVERRIDE
 
-setLaserPower(0)
-setOperationMode('indep')
-
-## ERROR HANDLING NEEDS TO BE REVISETED
-
-
-#### reset laser mode to independent mode                                               ##TODO
-
-#### set laser modulation to full                                                       ##TODO
+arduino.reset()
+arduino.setOperationMode('indep')
+arduino.setModulationMode('none', 0, 0)
 
 ##### SAFETY CHECKS ###########################################################
 
@@ -67,17 +61,17 @@ def argument_check(test_args, known_args):
         else:                                               ## expecting number
             if not test_args[i].isnumeric():    ## is the passed arg numeric?
                 return '24'
-            if not STRICT_MODE:					## is it in range?
-				if float(test_args[i]) < known_args[i][0]:
-					test_args[i] = known_args[i][0]
-					return '02'
-				if float(test_args[i]) > known_args[i][1]:
-					test_args[i] = known_args[i][1]
-					return '02'
+            if not STRICT_MODE:                    ## is it in range?
+                if float(test_args[i]) < known_args[i][0]:
+                    test_args[i] = known_args[i][0]
+                    return '02'
+                if float(test_args[i]) > known_args[i][1]:
+                    test_args[i] = known_args[i][1]
+                    return '02'
             else:
-				if (float(test_args[i]) < known_args[i][0]
-				or  float(test_args[i]) > known_args[i][1]):
-					return '25'
+                if (float(test_args[i]) < known_args[i][0]
+                or  float(test_args[i]) > known_args[i][1]):
+                    return '25'
     return '00'
 
 ##### QUERY HANDLER ###########################################################
@@ -90,12 +84,12 @@ def query(list):
 
 ##### COMMAND HANDLER #########################################################
 
-def command(test_args, known_args):														############### FINISH ME
+def command(test_args, known_args):                                                        ############### FINISH ME
     a_check = argument_check(test_args, known_args)
     i_check = interlock_check()
     warn_list = []
 
-	if a_check != '00': return a_check   ## arguments are not good
+    if a_check != '00': return a_check   ## arguments are not good
     if i_check == '90': return i_check   ## ilock open, override off
     if i_check == '09': warn_list.append('09')  ## append override warning if on
 
@@ -129,7 +123,7 @@ def laser_mains_QUERY():
 
 #######################################
 
-def laser_power_CMD(args):																### WILL BE DONE OVER ARDUINO NOW
+def laser_power_CMD(args):                                                                ### WILL BE DONE OVER ARDUINO NOW
     '''Sets amplitude of laser beam'''
 
     a_check = argument_check(args, [[0,100]])
@@ -234,10 +228,10 @@ def interlock_override_QUERY():
 ##### RULEBOOK FUNCTIONS - STRICT MODE ########################################
 
 def strict_mode_CMD(args):
-	pass
+    pass
 
 def strict_mode_QUERY():
-	pass
+    pass
 
 ##### MAIN ####################################################################
 
@@ -270,8 +264,8 @@ def parse(args):
         #######################
         '?INTERLOCK_STATUS'   : interlock_status_QUERY(args[1:]),
         '?INTERLOCK_OVERRIDE' : interlock_override_QUERY(),
-		#######################
-		'STRICT_MODE'		  : strict_mode_CMD(),
-		'?STRICT_MODE'		  : strict_mode_QUERY()
+        #######################
+        'STRICT_MODE'          : strict_mode_CMD(),
+        '?STRICT_MODE'          : strict_mode_QUERY()
     }
     return rulebook.get(args[0], return_code('20'))
