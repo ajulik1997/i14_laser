@@ -14,13 +14,13 @@ The following documentation is designed as a guide to simplify the processes of 
     - [Drivers and Packages](#drivers-and-packages)
     - [Python](#python)
     - [Pin Assignment](#pin-assignment)
-    - [Wiring Diagram](#wiring-diagram)
   - [Laser](#laser)
   - [Arduino](#arduino)
     - [Pin Assignment](#pin-assignment)
     - [LED Signalling](#led-signalling)
     - [Wiring Diagram](#wiring-diagram)
   - [Digital to Analog Converter](#digital-to-analog-converter)
+    - [Safety](#safety)
     - [Laser modulation](#laser-modulation)
   - [Camera](#camera)
 - [The Software](#the-software)
@@ -115,11 +115,13 @@ The settings that will be changed are:
     - **I2C**: disable the I2C interface and automatic loading of the I2C kernel module as we are not using it
     - **1-Wire** : disable the 1-Wire interface as we are not using it
 
+disabling other stuff
 
+say this stuff  isn't necessary but a good idea
 
-MORE GOES HERE ON MONDAY
+rename uer, all that stuff, ask F
 
-Talk about SSH and SCP
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 #### Drivers and Packages
 
@@ -210,6 +212,8 @@ At this point, the service should be set up to execute our script at boot. To te
 
 #### Python
 
+Quickly look at which packages need to be installed. What version of Python. How to install without internet, etc etc
+
 RPi.GPIO
 subprocess ?
 serial ?
@@ -217,11 +221,13 @@ time ?
 What version? What packages?
 socket
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 #### Pin Assignment
 
-Pinout diagram, which pin is mapped where
+Pinout diagram, which pin is mapped where, talk about all the available GPIO pins and why I picked the ones I picked
 
-#### Wiring Diagram
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ### Laser
 
@@ -331,25 +337,25 @@ A green "power" LED as well as an RGB "status" LED is used to signal different e
 |   Safety Interlock Open    |       Green       |   Red (continuous)    | The device detected that the safety interlock is open and is not being manually overridden, therefore laser modulation has been temporarily disabled. |
 | Safety Interlock Overridden |       Green       | Orange (intermittent) | The device detected that the safety interlock is open but it is being manually override. Laser modulation is enabled but an audible warning will sound (if enabled) synchronously with the orange warning light. |
 
-<LIST OF ASSIGNED PINS> <WIRING DIAGRAM>
-
 #### Wiring Diagram
+
+Paste diagram and pictures. Expain diagram. Probably split it into sections
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ### Digital to Analog Converter
 
-https://www.adafruit.com/product/935
+The digital-to-analog converter (DAC) used in the project is the 12-bit [MCP4725](https://cdn-shop.adafruit.com/datasheets/mcp4725.pdf) on an [Adafruit breakout board](https://www.adafruit.com/product/935). A useful tutorial by Adafruit on how to use the DAC with both Arduino and Raspberry Pi can be found [here](https://learn.adafruit.com/mcp4725-12-bit-dac-tutorial).
 
-https://learn.adafruit.com/mcp4725-12-bit-dac-tutorial
+The DAC receives data from the Ardino using the I2C interface, where the DAC is the slave device and Arduino is the master. The DAC's `SCL` and `SDA` pins connect directly to Arduino's `SCL [A5]` and `SDA [A4]` pins. The DAC receives 5V through its `VDD` pin, and can output any voltage between 0V and 5V with a 12-bit accuracy through its `VOUT` pin.
 
-https://www.sparkfun.com/datasheets/BreakoutBoards/MCP4725.pdf
+#### Safety
 
-https://cdn-shop.adafruit.com/datasheets/mcp4725.pdf
+The DAC's 5V input, instead of being connected directly to Arduino's 5V output, is connected to a logical OR gate (documentation)
 
-<SPECIFICATION> <DATA SHEET> <I2C>
+when it switches off
 
-resume to a safe state
-
-(add safety section here!)
+resume to a safe state after it has been switched off EEPROM
 
 Pin assignment!
 
@@ -363,7 +369,7 @@ http://www.ti.com/lit/ds/symlink/cd54hc32.pdf
 
 ### Camera
 
-add pin assignment section!
+add pin assignment section, just like I wrote on the paper!
 
 https://www.alliedvision.com/fileadmin/content/documents/products/cameras/Manta/techman/Manta_TechMan.pdf
 
