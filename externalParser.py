@@ -30,7 +30,7 @@ STRICT_MODE = True
 ## set up GPIO pins
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-GPIO.setup([4,17], GPIO.IN) ## 4: INTERLOCK; 17: INTERLOCK_OVERRIDE
+GPIO.setup([16,26], GPIO.IN) ## 16: INTERLOCK; 26: INTERLOCK_OVERRIDE
 
 arduino.reset()
 arduino.setOperationMode('indep')
