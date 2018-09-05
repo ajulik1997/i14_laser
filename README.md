@@ -151,6 +151,12 @@ sudo systemctl list-unit-files \
   | while read -r line; do sudo systemctl disable $line; done
 ```
 
+To install an NTP client on the Raspberry Pi:
+
+```shell
+sudo apt-get update && sudo apt-get install ntp
+```
+
 If the Raspberry Pi is connected to a network without access to an NTP server, or you want to set the time before connecting to a network, you can do so with the following command:
 
 ```shell
@@ -198,7 +204,7 @@ usermod -l pi new_username
 usermod -m -d pi new_username
 ```
 
-Note that, these two commands cannot be carried out the same time according to the [dpcumentation](https://linux.die.net/man/8/usermod), as changing the login name and the user's home directory have to be carried separately.
+Note that, these two commands cannot be carried out the same time according to the [documentation](https://linux.die.net/man/8/usermod), as changing the login name and the user's home directory have to be carried separately.
 
 After that is done, reboot the system and log in to your new user account. From that account, you can again disable the `root` account by doing the following:
 
@@ -303,6 +309,11 @@ serial ?
 time ?
 What version? What packages?
 socket
+
+- `RPi.GPIO`: for control of GPIO pins
+- `serial`: for serial communication with connected devices
+- `socket`: needed for accessing the BSD socket interface
+- `threading`: needed for a threaded server
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
