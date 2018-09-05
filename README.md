@@ -174,7 +174,7 @@ iptables -A INPUT -i lo -j ACCEPT
 iptables -A OUTPUT -o lo -j ACCEPT
 ```
 
-Additionally, we should all established sessions to communicate freely on the network:
+Additionally, we should allow all established sessions to communicate freely on the network:
 
 ```shell
 iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
@@ -189,9 +189,22 @@ iptables -A INPUT -p udp --dport 123 -j ACCEPT      # NTP
 iptables -A INPUT -p udp --dport 67:68 -j ACCEPT    # DHCP
 ```
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 ##### Default user setup
+
+It may be useful to also change the name and home directory of the default user from the default `pi`. To do this, first log in as the user `pi` and enable the `root` account by changing its password using `sudo passwd root` and entering a new password. Then, reboot the Raspberry Pi and log in as `root`, then execute:
+
+```shell
+usermod -l pi new_username
+usermod -m -d pi new_username
+```
+
+Note that, these two commands cannot be carried out the same time according to the [dpcumentation](https://linux.die.net/man/8/usermod), as changing the login name and the user's home directory have to be carried separately.
+
+After that is done, reboot the system and log in to your new user account. From that account, you can again disable the `root` account by doing the following:
+
+```shell
+sudo su -c "usermod -L -e 1 root"
+```
 
 #### Drivers and Packages
 
