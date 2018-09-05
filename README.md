@@ -103,11 +103,11 @@ You will be presented with a terminal user interface (TUI) similar to the one be
 
 ![raspi-config](resources\images\readme\raspi-config.PNG)
 
-The settings that will be changed are:
+The settings that will need be changed are:
   - **Change User Password**: change the user password so that it is not possible to start an SSH session with the Raspberry Pi using the default password
   - **Network Options**:
     - **Hostname**: change the name that the Raspberry Pi identifies itself as on the network (default is `raspberrypi`)
-  - **Interfacing Options**:
+  - **Interfacing Options** (optional):
     - **Camera**: disable the CSI camera interface as we are not using it
     - **SSH**: enable the SSH interface if you have not done so already
     - **VNC**: disable the VNC as we are not running a desktop environment
@@ -115,13 +115,83 @@ The settings that will be changed are:
     - **I2C**: disable the I2C interface and automatic loading of the I2C kernel module as we are not using it
     - **1-Wire** : disable the 1-Wire interface as we are not using it
 
-disabling other stuff
+If the device will only communicate over Ethernet, then we can disable Wi-Fi and Bluetooth by adding the following lines to `/boot/config.txt`:
 
-say this stuff  isn't necessary but a good idea
+```shell
+dtoverlay=pi3-disable-wifi
+dtoverlay=pi3-disable-bt
+```
 
-rename uer, all that stuff, ask F
+Once Bluetooth has been disabled, `systemd` will encounter an error when loading the `hciuart` service. Although this error is harmless, in order to avoid the error message at boot, you can do:
+
+```shell
+sudo systemctl disable hciuart
+```
+
+Optionally, it is a good idea to disable all other services that we will not need. A full list of active `systemd` services is obtained by running `sudo systemctl list-unit-files | grep enabled`. Please inspect this list **carefully** before disabling all but the services you require. I have found that the following services are critical for normal operation of a minimal Raspberry Pi system:
+
+- `autovt`: configures and manages virtual terminals
+- `cron`: time-based job scheduler
+- `dbus`: inter-process communication and message bus system
+- `dhcpcd`: provides a DHCP service
+- `fake-hwclock`: emulates a hardware clock on systems that don't have or support one
+- `getty`: short for "get TTY", it manages physical or virtual terminals
+- `networking`: manages all networking interfaces
+- `rsyslog`: manages system logging
+- `ssh`: SSH service
+- `systemd`: system and service manager for Linux
+
+To disable all enabled services except those listed above, execute:
+
+```shell
+sudo systemctl list-unit-files \
+  | grep enabled \
+  | cut -f 1 -d ' ' \
+  | grep -v -E 'autovt|cron|dbus|dhcpcd|fake-hwclock|getty|networking|rsyslog|ssh|systemd' \
+  | while read -r line; do sudo systemctl disable $line; done
+```
+
+If the Raspberry Pi is connected to a network without access to an NTP server, or you want to set the time before connecting to a network, you can do so with the following command:
+
+```shell
+sudo date -s "DD MMM YYYY HH:MM:SS"
+```
+
+##### Firewall setup
+
+Firewall rules for the Raspberry Pi also need to be set up. Firstly, the default behaviour should be that the Pi will drop all incoming and forwarded packets, but allow all outgoing packets:
+
+```shell
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+```
+
+Secondly, we should enable all communication on the `loopback` interface:
+
+```shell
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
+```
+
+Additionally, we should all established sessions to communicate freely on the network:
+
+```shell
+iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+```
+
+Finally, we add exceptions to the default behaviour by allowing the following incoming packets:
+
+```shell
+iptables -A INPUT -p tcp --dport 22 -j ACCEPT       # SSH
+iptables -A INPUT -p tcp --dport 14000 -j ACCEPT    # Python server
+iptables -A INPUT -p udp --dport 123 -j ACCEPT      # NTP
+iptables -A INPUT -p udp --dport 67:68 -j ACCEPT    # DHCP
+```
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+##### Default user setup
 
 #### Drivers and Packages
 
