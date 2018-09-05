@@ -101,7 +101,7 @@ sudo raspi-config
 
 You will be presented with a terminal user interface (TUI) similar to the one below:
 
-![raspi-config](resources\images\readme\raspi-config.PNG)
+![raspi-config](.resources\images\readme\raspi-config.PNG)
 
 The settings that will need be changed are:
   - **Change User Password**: change the user password so that it is not possible to start an SSH session with the Raspberry Pi using the default password
@@ -301,6 +301,8 @@ At this point, the service should be set up to execute our script at boot. To te
 
 #### Python
 
+3.5.3
+
 Quickly look at which packages need to be installed. What version of Python. How to install without internet, etc etc
 
 RPi.GPIO
@@ -319,9 +321,42 @@ socket
 
 #### Pin Assignment
 
-Pinout diagram, which pin is mapped where, talk about all the available GPIO pins and why I picked the ones I picked
+The pinout of the Raspberry Pi can be seen in the image below (obtained from [pinout.xyz](https://pinout.xyz/resources/raspberry-pi-pinout.png)):
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+![Raspberry Pi Pinout](./resources/images/readme/raspberry-pi-pinout.png)
+
+A large number of the GPIO pins available to us are, or can be, used for other purposes, such as I2C, SPI, and UART. The pins assigned in this project have been carefully selected to not overlap with any of these interfaces, not because they are being used in this project, but because in the scenario where their use becomes useful, the pins will not need to be moved and the code will not need to be edited. The following table describes the pin assignment used for the Raspberry Pi.
+
+| GPIO (BCM) Pin Number | Physical Pin Number |         Assignment        | Input / Output |                                                             Description                                                             |
+|:---------------------:|:-------------------:|:-------------------------:|:--------------:|:-----------------------------------------------------------------------------------------------------------------------------------:|
+|           0           |          27         |         UNASSIGNED        |                |                                                     Used by Raspberry Pi for I2C                                                    |
+|           1           |          28         |         UNASSIGNED        |                |                                                     Used by Raspberry Pi for I2C                                                    |
+|           2           |          3          |         UNASSIGNED        |                |                                                     Used by Raspberry Pi for I2C                                                    |
+|           3           |          5          |         UNASSIGNED        |                |                                                     Used by Raspberry Pi for I2C                                                    |
+|           4           |          7          |         UNASSIGNED        |                |         Used by Raspberry Pi for GPCLK, allows the Pi to be set up to output a fixed frequency without any software control         |
+|           5           |          29         |         UNASSIGNED        |                |         Used by Raspberry Pi for GPCLK, allows the Pi to be set up to output a fixed frequency without any software control         |
+|           6           |          31         |         UNASSIGNED        |                |         Used by Raspberry Pi for GPCLK, allows the Pi to be set up to output a fixed frequency without any software control         |
+|           7           |          26         |         UNASSIGNED        |                |                                                   Used by the Raspberry Pi for SPI                                                  |
+|           8           |          24         |         UNASSIGNED        |                |                                                   Used by the Raspberry Pi for SPI                                                  |
+|           9           |          21         |         UNASSIGNED        |                |                                                   Used by the Raspberry Pi for SPI                                                  |
+|           10          |          19         |         UNASSIGNED        |                |                                                   Used by the Raspberry Pi for SPI                                                  |
+|           11          |          23         |         UNASSIGNED        |                |                                                   Used by the Raspberry Pi for SPI                                                  |
+|           12          |          32         |         UNASSIGNED        |                |                                              Used by the Raspberry Pi for Hardware PWM                                              |
+|           13          |          3          |         UNASSIGNED        |                |                                              Used by the Raspberry Pi for Hardware PWM                                              |
+|           14          |          8          |         UNASSIGNED        |                |                                                  Used by the Raspberry Pi for UART                                                  |
+|           15          |          10         |         UNASSIGNED        |                |                                                  Used by the Raspberry Pi for UART                                                  |
+|           16          |          36         |  SAFETY INTERLOCK STATUS  |      INPUT     |                                             Monitors the status of the safety interlock                                             |
+|           17          |          11         |  MODULATION MODE SELECTOR |     OUTPUT     | A combination of 3 Modulation Mode Selector pins will signal the Arduino to output one of the corresponding preprogramed waveforms |
+|           18          |          12         |         UNASSIGNED        |                |                                                  Used by the Raspberry Pi for UART                                                  |
+|           19          |          35         |         UNASSIGNED        |                |                                                   Used by the Raspberry Pi for SPI                                                  |
+|           20          |          38         |         UNASSIGNED        |                |                                                   Used by the Raspberry Pi for SPI                                                  |
+|           21          |          40         |         UNASSIGNED        |                |                                                   Used by the Raspberry Pi for SPI                                                  |
+|           22          |          15         |  MODULATION MODE SELECTOR |     OUTPUT     | A combination of 3 Modulation Mode Selector pins will signal the Arduino to output one of the corresponding preprogramed waveforms |
+|           23          |          16         |  OPERATION MODE SELECTOR  |     OUTPUT     |     A combination of 2 of the Operation Mode Selector pins will signal the Arduino to switch to the corresponding operation mode    |
+|           24          |          18         |  OPERATION MODE SELECTOR  |     OUTPUT     |     A combination of 2 of the Operation Mode Selector pins will signal the Arduino to switch to the corresponding operation mode    |
+|           25          |          22         |       ARDUINO RESET       |     OUTPUT     |                           Turning on this pin will reset the Arduino and bring back to a known safe state                           |
+|           26          |          37         | INTERLOCK OVERRIDE STATUS |      INPUT     |                                         Monitors the status of the Safety Interlock Override                                        |
+|           27          |          13         |  MODULATION MODE SELECTOR |     OUTPUT     | A combination of 3 Modulation Mode Selector pins will signal the Arduino to output one of the corresponding preprogramed waveforms |
 
 ### Laser
 
