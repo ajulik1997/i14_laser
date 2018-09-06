@@ -522,17 +522,50 @@ When this period is pushed even lower, the generated wave looks less like a sine
 
 ![Oscilloscope_sine_100_10ms](resources\images\oscilloscope\final\TEK00010.PNG)
 
-At the smallest possible period, the wave is no longer a sine wave. The square wave generated below is a sine wave with a target period of 1ms. The actual period is also 32.7% larger than the target. Due to this increase in inaccuracies with decreasing period targets, periods under 10ms are considered "inaccurate", and should only be used if this inaccuracy is not a problem.
+At the smallest possible period, the wave is no longer a sine wave. The square wave generated below is a sine wave with a target period of 1ms. The actual period is also 32.7% larger than the target. Due to this increase in inaccuracies with decreasing period targets, periods under 10ms are considered "inaccurate", and should only be used if higher frequencies are necessary (but using `square` as your modulation mode would give even higher frequencies with much higher accuracy).
 
 ![Oscilloscope_sine_100_1ms](resources\images\oscilloscope\final\TEK00011.PNG)
 
-Boundary 10ms
+The same behaviour can be seen across other waveforms as well. The images below are for the `triangle` and `sawtooth` modulation modes.
+
+| ![Oscilloscope_triangle_100_100ms](resources\images\oscilloscope\final\TEK00013.PNG) | ![Oscilloscope_triangle_100_1ms](resources\images\oscilloscope\final\TEK00012.PNG) |
+|:-:|:-:|
+| Triangle wave at 100ms target (exact) | Triangle wave at 1ms target (+7.9%) |
+
+| ![Oscilloscope_sawtooth_100_1000ms](resources\images\oscilloscope\final\TEK00015.PNG) | ![Oscilloscope_sawtooth_100_1ms](resources\images\oscilloscope\final\TEK00016.PNG) |
+|:-:|:-:|
+| Sawtooth wave at (1s) 1000ms target (+0.4%) | Sawtooth wave at 1ms target (+41.2%) |
+
+The final modulation mode available is `pulse`. A single pulse is defined by three parameters: the amplitude of the pulse, the length of the pulse, and the delay until the start of the successive pulse. This mode allows for pulses of length up to 1 hour, and as little as a millisecond. The following image shows a 100 millisecond pulse followed by a second pause, resulting in a perfect 1.1 second period.
+
+![Oscilloscope_sawtooth_100_1000ms](resources\images\oscilloscope\final\TEK00017.PNG)
+
+The following data gives the exact limits applied to the selection of the period for various modulation modes, and their measured corresponding deviations from the expected value:
+
+| Modulation Mode | Period Limits | Needs calibration | Calibration Length | Typical [maximum] deviation (10ms - 100ms) | Typical [maximum] deviation (< 10ms) |
+|:---------------:|:-------------:|:-----------------:|:------------------:|:------------------------------------------:|:------------------------------------:|
+|      `none`     |      none     |         No        |         N/A        |                     N/A                    |                  N/A                 |
+|      `sine`     |    1ms - 1s   |        Yes        |      5s - 10s      |                  +1% [+2%]                 |              +20% [+50%]             |
+|     `square`    |   1ms - 1hr   |         No        |         N/A        |                 +0.5% [+1%]                |              +5% [+10%]              |
+|    `triangle`   |    1ms - 1s   |        Yes        |      5s - 10s      |                  +1% [+2%]                 |              +20% [+50%]             |
+|    `sawtooth`   |    1ms - 1s   |        Yes        |      5s - 10s      |                  +1% [+2%]                 |              +20% [+50%]             |
+|     `pulse`     |   1ms - 1hr   |         No        |         N/A        |                 +0.5% [+1%]                |              +5% [+10%]              |
 
 ### Camera
 
+The camera used in this project is the [Alled Vison Manta](https://www.alliedvision.com/fileadmin/content/documents/products/cameras/Manta/techman/Manta_TechMan.pdf
+). It uses the Hirose HR10-10R-12PA(73) connector, for which we used the Hirose HR10A-10P-12S breakout cable. The pin numbering for the Hirose cable can be seen below:
+
+![Hirose](resources\images\readme\hirose.PNG | width=100)
+
+According to the input diagram
+
+![Camera Input](resources\images\readme\camera_input.PNG)
+
+![Camera Output](resources\images\readme\camera_output.PNG)
+
 add pin assignment section, just like I wrote on the paper!
 
-https://www.alliedvision.com/fileadmin/content/documents/products/cameras/Manta/techman/Manta_TechMan.pdf
 
 
 ## The Software
