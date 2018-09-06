@@ -582,12 +582,10 @@ With this knowledge, it is possible to create a pin assignment table:
 
 CRATE A FILE FROM THIS AND HOST IT, AND CLEAN IT UP, LIKE ABOVE
 
-'''
 [Unit]
 Description=Python3 server
-After=multi-user.target
+After = multi-user.target network.target network-online.target
 Wants = network-online.target
-After = network.target network-online.target
 
 [Service]
 Type=idle
@@ -596,7 +594,7 @@ ExecStart=/usr/bin/python3 /home/pi/server.py
 
 [Install]
 WantedBy=multi-user.target
-'''
+
 
 /lib/systemd/system/server.service
 

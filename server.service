@@ -1,0 +1,12 @@
+[Unit]
+Description=Python3 server
+After = multi-user.target network.target network-online.target
+Wants = network-online.target
+
+[Service]
+Type=idle
+Restart=always
+ExecStart=/usr/bin/python3 /home/pi/server.py
+
+[Install]
+WantedBy=multi-user.target
