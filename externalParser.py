@@ -30,7 +30,7 @@ STRICT_MODE = True
 ## set up GPIO pins
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-GPIO.setup([16,26], GPIO.IN) ## 16: INTERLOCK; 26: INTERLOCK_OVERRIDE
+GPIO.setup([23,24], GPIO.IN) ## 16: INTERLOCK; 26: INTERLOCK_OVERRIDE
 
 arduino.reset()
 
@@ -39,8 +39,9 @@ arduino.reset()
 def interlock_check():
     '''Returns interlock and override status'''
 
-    if GPIO.input(16) == 1: return '00'    ## interlock closed
-    if GPIO.input(26) == 1: return '04'    ## interlock open, override on
+    if GPIO.input(23) == 1: return '00'    ## interlock closed
+    if GPIO.input(24) == 1: return '04'    ## interlock open, override on
+    LASER_POWER = 0
     return '90'                            ## interlock open, override off
 
 ##### ARGUMENT CHECKS #########################################################
@@ -66,7 +67,7 @@ def argument_check(test_args, known_args):
                 if float(test_args[i]) > known_args[i][1]:
                     test_args[i] = known_args[i][1]
                     return '02'
-            else:
+            else:              ## if strict mode, throw error instead of warning
                 if (float(test_args[i]) < known_args[i][0]
                 or  float(test_args[i]) > known_args[i][1]):
                     return '25'
@@ -83,37 +84,36 @@ def query(list):
 ##### COMMAND HANDLER #########################################################
 
 def command(test_args, known_args, on_success, *additional_checks):
+    '''GENERIC COMMAND PROCESSOR'''
+
+    ## check arguments and interlock
     a_check = argument_check(test_args, known_args)
     i_check = interlock_check()
     warnings = '00'
 
+    ## analyse results, compile warnings
     if a_check[0] != '0': return a_check        ## arguments are not good
     if i_check[0] != '0': return i_check        ## ilock open, override off
     warnings = "{:02}".format(str(int(warnings) + int(a_check) + int(i_check)))
 
+    ## run aditional checks as requested
     for check in additional_checks:
         status = eval(check)
         if status[0] != '0': return status
         warnings = "{:02}".format(str(int(warnings) + int(status)))
 
+    ## if action does not need carrying out, skip it
     if int(warnings)%2 == 0:
         result_of_exec = exec(on_success)
         if result_of_exec != '00': return result_of_exec
 
+    ## if you got here, only warnings or success
     return warnings
 
 ##### RULEBOOK FUNCTIONS - LASER ##############################################
 
 def laser_mains_CMD(args):
     '''Switches laser ON or OFF'''
-
-    #a_check = argument_check(args, [['ON', 'OFF']])
-    #i_check = interlock_check()
-    #warn_list = []
-
-    #if a_check != '00': return return_code(a_check)   ## arguments are not good
-    #if i_check == '90': return return_code(i_check)   ## ilock open, override off
-    #if i_check == '04': warn_list.append('04')  ## append override warning if on
 
     check = "if args[0].upper() == laser('SOUR:AM:STAT?')[-1]: return('01')"
     command = "laser('SOUR:AM:STAT '+args[0].upper())"
@@ -133,51 +133,54 @@ def laser_mains_QUERY():
 def laser_power_CMD(args):                                                                ### WILL BE DONE OVER ARDUINO NOW
     '''Sets amplitude of laser beam'''
 
-    #a_check = argument_check(args, [[0,100]])
-    #i_check = interlock_check()
-    #warn_list = []
+    check = "if args[0] == LASER_POWER: return('01')"
+    command = "LASER_POWER = args[0]; arduino.setLaserPower(LASER_POWER)"
+    result = command(args, [[0, 100]], command, check)
 
-    #if a_check != '00' or a_check != '02': return return_code(a_check)   ## arguments are not good
-    #if a_check == '02': return
-    #if i_check == '90': return return_code(i_check)   ## ilock open, override off
-    #if i_check == '04': warn_list.append('04')  ## append override warning if on
-
-    ## add warning and do nothing if laser power already set to wanted value
-    #if args[0] == LASER_POWER: warn_list.append('01')
-    #else: ## set laser power
-    #    result = intensity(args[0])
-    #    if result != '00': return return_code(result)
-
-    #return warn_parse(warn_list)
-    return ''
+    return return_code(result)
 
 def laser_power_QUERY():
-    #return str(LASER_POWER)
-    return ''
+    '''Gets amplitude of laser beam'''
+
+    return (str(LASER_POWER)+'\r\n').encode(encoding='ascii')
 
 def laser_status_QUERY():
-    ## STAT
-    return ''
+    '''Gets laser status code'''
+
+    return query(laser("SYST:STAT?"))
 
 def laser_fault_QUERY():
-    ## FAUL
-    return ''
+    '''Gets laser fault code'''
+
+    return query(laser("SYST:FAUL?"))
 
 def laser_mode_CMD(args):
-    #a_check = argument_check(args, [['gated', 'master', 'indep']])
-    #return a_check
-    return ''
+    '''Sets laser operation mode'''
+
+    check = "if args[0] == LASER_MODE: return('01')"
+    command = "LASER_MODE = args[0]; arduino.setOperationMode(LASER_MODE)"
+    result = command(args, [['gated', 'master', 'indep']], command, check)
+
+    return return_code(result)
 
 def laser_mode_QUERY():
-    return ''
+    '''Gets laser operation mode'''
+
+    return (str(LASER_MODE)+'\r\n').encode(encoding='ascii')
 
 def laser_mod_polarity_CMD(args):
-    #a_check = argument_check(args, [['pass', 'invert']])
-    #return a_check
-    return ''
+    '''Sets laser modulation polarity'''
+
+    check = "if args[0].upper() == laser('SOUR:AM:MPOL?')[-1]: return('01')"
+    command = "laser('SOUR:AM:MPOL '+args[0].upper())"
+    result = command(args, [['PASS', 'INVERT']], command, check)
+
+    return return_code(result)
 
 def laser_mod_polarity_QUERY():
-    return ''
+    '''Gets laser modulation polarity'''
+
+    return query(laser("SYST:AM:MPOL?"))
 
 def laser_modulation_CMD(args):
     #a_check = argument_check(args, [['sine', 'square', 'triangle', 'sawtooth', 'full'],
@@ -233,16 +236,16 @@ def info_server_QUERY():
 ##### RULEBOOK FUNCTIONS - INTERLOCK ##########################################
 
 def interlock_status_QUERY():
-    if GPIO.input(16) == 0:
+    if GPIO.input(23) == 0:
         return 'OPEN'
     else:
         return 'CLOSED'
 
 def interlock_override_QUERY():
-    if GPIO.input(26) == 0:
+    if GPIO.input(24) == 0:
         return 'OFF'
     else:
-        return 'on'
+        return 'ON'
 
 ##### RULEBOOK FUNCTIONS - STRICT MODE ########################################
 
