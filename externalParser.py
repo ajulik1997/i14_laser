@@ -42,7 +42,7 @@ def interlock_check():
     '''Returns interlock and override status'''
 
     if GPIO.input(4) == 1: return '00'     ## interlock closed
-    if GPIO.input(17) == 1: return '09'    ## interlock open, override on
+    if GPIO.input(17) == 1: return '04'    ## interlock open, override on
     return '90'                            ## interlock open, override off
 
 ##### ARGUMENT CHECKS #########################################################
@@ -91,7 +91,7 @@ def command(test_args, known_args):                                             
 
     if a_check != '00': return a_check   ## arguments are not good
     if i_check == '90': return i_check   ## ilock open, override off
-    if i_check == '09': warn_list.append('09')  ## append override warning if on
+    if i_check == '04': warn_list.append('04')  ## append override warning if on
 
 ##### RULEBOOK FUNCTIONS - LASER ##############################################
 
@@ -104,7 +104,7 @@ def laser_mains_CMD(args):
 
     if a_check != '00': return return_code(a_check)   ## arguments are not good
     if i_check == '90': return return_code(i_check)   ## ilock open, override off
-    if i_check == '09': warn_list.append('09')  ## append override warning if on
+    if i_check == '04': warn_list.append('04')  ## append override warning if on
 
     ## add warning and do nothing if laser is already on/off
     if args[0].upper() == laser("SOUR:AM:STAT?")[-1]: warn_list.append('01')
@@ -133,7 +133,7 @@ def laser_power_CMD(args):                                                      
     if a_check != '00' or a_check != '02': return return_code(a_check)   ## arguments are not good
     if a_check == '02': return
     if i_check == '90': return return_code(i_check)   ## ilock open, override off
-    if i_check == '09': warn_list.append('09')  ## append override warning if on
+    if i_check == '04': warn_list.append('04')  ## append override warning if on
 
     ## add warning and do nothing if laser power already set to wanted value
     if args[0] == LASER_POWER: warn_list.append('01')

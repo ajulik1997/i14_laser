@@ -25,7 +25,7 @@ def return_code(obj):
         ##### 0X : SUCCESS WITH WARNINGS ##########################################
         "01" : '01 : Command has no effect',                                # {&&&}
         "02" : '02 : One or more of the arguments were out of range',       # {&&&}
-        "09" : '09 : Safety interlock override is on',                      # {&&&}
+        "04" : '09 : Safety interlock override is on',                      # {&&&}
         ##### 1X : MESSAGE ERRORS #################################################
         "10" : '10 : Received message is too short or contains no data',
         "11" : '11 : Received message is too long and cannot be parsed',
@@ -44,7 +44,7 @@ def return_code(obj):
         "31" : '31 : Unable to connect to specified TTY port',              # {+++}
         "32" : '32 : A timeout occurred when reading from TTY port',
         "33" : '33 : Laser returned an error while executing command',      # {+++}
-		"34" : '34 : Arduino returned an unexpected response',              # {+++}
+        "34" : '34 : Arduino returned an unexpected response',              # {+++}
         "35" : '35 : Unable to edit TTY settings for Arduino compatibility',# {+++}
         ##### 4X : I2C ERRORS #####################################################
         "40" : '40 : Unable to connect to I2C device',                      # {+++}
