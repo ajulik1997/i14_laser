@@ -484,61 +484,61 @@ Additionally, once the DAC's power returns (either the interlock is closed or th
 
 The Arduino has been programmed with 6 different modulation modes. If modulation is set to `none`, a waveform will not be generated, but a continuous wave of adjustable amplitude will be outputted. At an amplitude of 100%, the laser output looks like the image below, and looks analogous to how it operated before this project.
 
-![Oscilloscope_none_100](.resources/images/oscilloscope/final/TEK00000.PNG)
+![Oscilloscope_none_100](resources/images/oscilloscope/final/TEK00000.PNG)
 
 The amplitude of the continuous wave can be set to any value between 0% and 100%. Here is the oscilloscope output for a continuous wave, this time at 42% amplitude.
 
-![Oscilloscope_none_42](.resources/images/oscilloscope/final/TEK00001.PNG)
+![Oscilloscope_none_42](resources/images/oscilloscope/final/TEK00001.PNG)
 
 The second modulation mode is `sine`. This mode generates a sine wave with a custom amplitude and period. The image below shows a sine wave at 100% amplitude with a period of exactly 100 milliseconds.
 
-![Oscilloscope_sine_100](.resources/images/oscilloscope/final/TEK00003.PNG)
+![Oscilloscope_sine_100](resources/images/oscilloscope/final/TEK00003.PNG)
 
 The amplitude of any wave can be changed. For the sake of brevity, not every waveform will be included with a range of amplitudes in this documentation. The following image is also a 100 millisecond sine wave, but this time with an amplitude of about 42%
 
-![Oscilloscope_sine_42](.resources/images/oscilloscope/final/TEK00004.PNG)
+![Oscilloscope_sine_42](resources/images/oscilloscope/final/TEK00004.PNG)
 
 An additional parameter can be specified for any wave: the delay between every successive cycle. The wave below is a 100ms period wave with a delay of 200ms between waves, creating a total period of exactly 300ms.
 
-![Oscilloscope_sine_100_wait](.resources/images/oscilloscope/final/TEK00005.PNG)
+![Oscilloscope_sine_100_wait](resources/images/oscilloscope/final/TEK00005.PNG)
 
 If the operation mode of the Arduino is set to `master`, then the Arduino will output a HIGH when the amplitude of a wave reaches a user-defined threshold. This output, shown in blue, can be used to synchronise the laser modulation with the shutter of a camera (for example, only exposing when the laser is illuminating the sample adequately).
 
-![Oscilloscope_sine_100_threshold_50](.resources/images/oscilloscope/final/TEK00006.PNG)
+![Oscilloscope_sine_100_threshold_50](resources/images/oscilloscope/final/TEK00006.PNG)
 
 The previous image showed the trigger threshold at 50%. The following image shows the behaviour when the threshold is raised to 80%
 
-![Oscilloscope_sine_100_threshold_80](.resources/images/oscilloscope/final/TEK00007.PNG)
+![Oscilloscope_sine_100_threshold_80](resources/images/oscilloscope/final/TEK00007.PNG)
 
 The period of the sine wave can be as high as 1 second. The image below shows this wave being generated fairly accurately, only 1.1% above the target period. Periods higher than 1 second are disabled, as above this value, you should consider switching to continuous-wave mode.
 
-![Oscilloscope_sine_100_1s](.resources/images/oscilloscope/final/TEK00008.PNG)
+![Oscilloscope_sine_100_1s](resources/images/oscilloscope/final/TEK00008.PNG)
 
 The period of the sine wave can also pushed a lot lower than 100ms, but with some disadvantages. The image below shows a sine wave with a target period of 10ms, with a true value of 0.9% above the target. The wave is no longer smooth, and the time it takes for the DAC to update the voltage and the Arduino to calculate the next point on the wave becomes visible.
 
-![Oscilloscope_sine_100_10ms](.resources/images/oscilloscope/final/TEK00009.PNG)
+![Oscilloscope_sine_100_10ms](resources/images/oscilloscope/final/TEK00009.PNG)
 
 When this period is pushed even lower, the generated wave looks less like a sine wave and instead resembles a triangle wave. The target period of this wave is 2ms, but it is being generated with a period 16.7% higher than the target - a value no longer considered acceptably accurate.
 
-![Oscilloscope_sine_100_10ms](.resources/images/oscilloscope/final/TEK00010.PNG)
+![Oscilloscope_sine_100_10ms](resources/images/oscilloscope/final/TEK00010.PNG)
 
 At the smallest possible period, the wave is no longer a sine wave. The square wave generated below is a sine wave with a target period of 1ms. The actual period is also 32.7% larger than the target. Due to this increase in inaccuracies with decreasing period targets, periods under 10ms are considered "inaccurate", and should only be used if higher frequencies are necessary (but using `square` as your modulation mode would give even higher frequencies with much higher accuracy).
 
-![Oscilloscope_sine_100_1ms](.resources/images/oscilloscope/final/TEK00011.PNG)
+![Oscilloscope_sine_100_1ms](resources/images/oscilloscope/final/TEK00011.PNG)
 
 The same behaviour can be seen across other waveforms as well. The images below are for the `triangle` and `sawtooth` modulation modes.
 
-| ![Oscilloscope_triangle_100_100ms](.resources/images/oscilloscope/final/TEK00013.PNG) | ![Oscilloscope_triangle_100_1ms](.resources/images/oscilloscope/final/TEK00012.PNG) |
+| ![Oscilloscope_triangle_100_100ms](resources/images/oscilloscope/final/TEK00013.PNG) | ![Oscilloscope_triangle_100_1ms](resources/images/oscilloscope/final/TEK00012.PNG) |
 |:-:|:-:|
 | Triangle wave at 100ms target (exact) | Triangle wave at 1ms target (+7.9%) |
 
-| ![Oscilloscope_sawtooth_100_1000ms](.resources/images/oscilloscope/final/TEK00015.PNG) | ![Oscilloscope_sawtooth_100_1ms](.resources/images/oscilloscope/final/TEK00016.PNG) |
+| ![Oscilloscope_sawtooth_100_1000ms](resources/images/oscilloscope/final/TEK00015.PNG) | ![Oscilloscope_sawtooth_100_1ms](resources/images/oscilloscope/final/TEK00016.PNG) |
 |:-:|:-:|
 | Sawtooth wave at (1s) 1000ms target (+0.4%) | Sawtooth wave at 1ms target (+41.2%) |
 
 The final modulation mode available is `pulse`. A single pulse is defined by three parameters: the amplitude of the pulse, the length of the pulse, and the delay until the start of the successive pulse. This mode allows for pulses of length up to 1 hour, and as little as a millisecond. The following image shows a 100 millisecond pulse followed by a second pause, resulting in a perfect 1.1 second period.
 
-![Oscilloscope_sawtooth_100_1000ms](.resources/images/oscilloscope/final/TEK00017.PNG)
+![Oscilloscope_sawtooth_100_1000ms](resources/images/oscilloscope/final/TEK00017.PNG)
 
 The following data gives the exact limits applied to the selection of the period for various modulation modes, and their measured corresponding deviations from the expected value:
 
@@ -556,13 +556,13 @@ The following data gives the exact limits applied to the selection of the period
 The camera used in this project is the [Alled Vison Manta](https://www.alliedvision.com/fileadmin/content/documents/products/cameras/Manta/techman/Manta_TechMan.pdf
 ). It uses the Hirose HR10-10R-12PA(73) connector, for which we used the Hirose HR10A-10P-12S breakout cable. The pin numbering for the Hirose cable can be seen below:
 
-![Hirose](.resources/images/readme/hirose.PNG | width=100)
+![Hirose](resources/images/readme/hirose.PNG | width=100)
 
 According to the input diagram
 
-![Camera Input](.resources/images/readme/camera_input.PNG)
+![Camera Input](resources/images/readme/camera_input.PNG)
 
-![Camera Output](.resources/images/readme/camera_output.PNG)
+![Camera Output](resources/images/readme/camera_output.PNG)
 
 add pin assignment section, just like I wrote on the paper!
 
