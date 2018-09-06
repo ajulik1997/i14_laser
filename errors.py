@@ -25,7 +25,7 @@ def return_code(obj):
         ##### 0X : SUCCESS WITH WARNINGS ##########################################
         "01" : '01 : Command has no effect',                                # {&&&}
         "02" : '02 : One or more of the arguments were out of range',       # {&&&}
-        "04" : '09 : Safety interlock override is on',                      # {&&&}
+        "04" : '04 : Safety interlock override is on',                      # {&&&}
         ##### 1X : MESSAGE ERRORS #################################################
         "10" : '10 : Received message is too short or contains no data',
         "11" : '11 : Received message is too long and cannot be parsed',
@@ -54,7 +54,10 @@ def return_code(obj):
     }
 
     if type(obj) is str:
-        message = return_codes.get(obj, '?? : An unknown error code was returned')
+        if 0 < int(obj) < 10:
+            message = obj + ' : More than one warning has occured'
+        else:
+            message = return_codes.get(obj, '?? : An unknown error code was returned')
 
     if type(obj) is list:
         message = return_codes.get(obj[0], '?? : An unknown error code was returned')

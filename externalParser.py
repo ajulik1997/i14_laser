@@ -20,7 +20,7 @@ LASER_POWER = 0                 ## reset laser power to zero
 LASER_MODE = 'indep'            ## reset laser mode to independent operation
 LASER_MODULATION = 'none'       ## reset modulation to none (no modulation)
 LASER_MODULATION_PERIOD = 0     ## reset modulation period to default
-LASER_MODULATION_DELAY = 0      ## reset modulation LASER_MODULATION_DELAY to default
+LASER_MODULATION_DELAY = 0      ## reset modulation to default
 LASER_TRIGGER_THRESHOLD = 0     ## reset camera trigger threshold to default
 
 STRICT_MODE = True
@@ -82,35 +82,44 @@ def query(list):
 
 ##### COMMAND HANDLER #########################################################
 
-def command(test_args, known_args):                                                        ############### FINISH ME
+def command(test_args, known_args, on_success, *additional_checks):
     a_check = argument_check(test_args, known_args)
     i_check = interlock_check()
-    warn_list = []
+    warnings = '00'
 
-    if a_check != '00': return a_check          ## arguments are not good
-    if i_check == '90': return i_check          ## ilock open, override off
-    if i_check == '04': warn_list.append('04')  ## append override warning if on
+    if a_check[0] != '0': return a_check        ## arguments are not good
+    if i_check[0] != '0': return i_check        ## ilock open, override off
+    warnings = "{:02}".format(str(int(warnings) + int(a_check) + int(i_check)))
+
+    for check in additional_checks:
+        status = eval(check)
+        if status[0] != '0': return status
+        warnings = "{:02}".format(str(int(warnings) + int(status)))
+
+    if int(warnings)%2 == 0:
+        result_of_exec = exec(on_success)
+        if result_of_exec != '00': return result_of_exec
+
+    return warnings
 
 ##### RULEBOOK FUNCTIONS - LASER ##############################################
 
 def laser_mains_CMD(args):
     '''Switches laser ON or OFF'''
 
-    a_check = argument_check(args, [['ON', 'OFF']])
-    i_check = interlock_check()
-    warn_list = []
+    #a_check = argument_check(args, [['ON', 'OFF']])
+    #i_check = interlock_check()
+    #warn_list = []
 
-    if a_check != '00': return return_code(a_check)   ## arguments are not good
-    if i_check == '90': return return_code(i_check)   ## ilock open, override off
-    if i_check == '04': warn_list.append('04')  ## append override warning if on
+    #if a_check != '00': return return_code(a_check)   ## arguments are not good
+    #if i_check == '90': return return_code(i_check)   ## ilock open, override off
+    #if i_check == '04': warn_list.append('04')  ## append override warning if on
 
-    ## add warning and do nothing if laser is already on/off
-    if args[0].upper() == laser("SOUR:AM:STAT?")[-1]: warn_list.append('01')
-    else:   ## time to switch on/off laser, and see if it worked
-        result = laser("SOUR:AM:STAT "+args[0].upper())
-        if result[0] != '00': return warn_parse(result) ## laser returned error
+    check = "if args[0].upper() == laser('SOUR:AM:STAT?')[-1]: return('01')"
+    command = "laser('SOUR:AM:STAT '+args[0].upper())"
+    result = command(args, [['ON', 'OFF']], command, check)
 
-    return warn_parse(warn_list)  ## return all the warnings formatted nicely
+    return return_code(result)
 
 #######################################
 
@@ -124,25 +133,27 @@ def laser_mains_QUERY():
 def laser_power_CMD(args):                                                                ### WILL BE DONE OVER ARDUINO NOW
     '''Sets amplitude of laser beam'''
 
-    a_check = argument_check(args, [[0,100]])
-    i_check = interlock_check()
-    warn_list = []
+    #a_check = argument_check(args, [[0,100]])
+    #i_check = interlock_check()
+    #warn_list = []
 
-    if a_check != '00' or a_check != '02': return return_code(a_check)   ## arguments are not good
-    if a_check == '02': return
-    if i_check == '90': return return_code(i_check)   ## ilock open, override off
-    if i_check == '04': warn_list.append('04')  ## append override warning if on
+    #if a_check != '00' or a_check != '02': return return_code(a_check)   ## arguments are not good
+    #if a_check == '02': return
+    #if i_check == '90': return return_code(i_check)   ## ilock open, override off
+    #if i_check == '04': warn_list.append('04')  ## append override warning if on
 
     ## add warning and do nothing if laser power already set to wanted value
-    if args[0] == LASER_POWER: warn_list.append('01')
-    else: ## set laser power
-        result = intensity(args[0])
-        if result != '00': return return_code(result)
+    #if args[0] == LASER_POWER: warn_list.append('01')
+    #else: ## set laser power
+    #    result = intensity(args[0])
+    #    if result != '00': return return_code(result)
 
-    return warn_parse(warn_list)
+    #return warn_parse(warn_list)
+    return ''
 
 def laser_power_QUERY():
-    return str(LASER_POWER)
+    #return str(LASER_POWER)
+    return ''
 
 def laser_status_QUERY():
     ## STAT
@@ -153,24 +164,27 @@ def laser_fault_QUERY():
     return ''
 
 def laser_mode_CMD(args):
-    a_check = argument_check(args, [['gated', 'master', 'indep']])
-    return a_check
+    #a_check = argument_check(args, [['gated', 'master', 'indep']])
+    #return a_check
+    return ''
 
 def laser_mode_QUERY():
     return ''
 
 def laser_mod_polarity_CMD(args):
-    a_check = argument_check(args, [['pass', 'invert']])
-    return a_check
+    #a_check = argument_check(args, [['pass', 'invert']])
+    #return a_check
+    return ''
 
 def laser_mod_polarity_QUERY():
     return ''
 
 def laser_modulation_CMD(args):
-    a_check = argument_check(args, [['sine', 'square', 'triangle', 'sawtooth', 'full'],
-                                    [0, 10000],
-                                    [0, 100]])
-    return a_check
+    #a_check = argument_check(args, [['sine', 'square', 'triangle', 'sawtooth', 'full'],
+    #                                [0, 10000],
+    #                                [0, 100]])
+    #return a_check
+    return ''
 
 def laser_modulation_QUERY():
     return ''
@@ -210,23 +224,24 @@ def temp_diode_min_QUERY():
 ##### RULEBOOK FUNCTIONS - INFO ###############################################
 
 def info_laser_QUERY():
+    # some compound function
     return ''
 
 def info_server_QUERY():
-    return 'I14 Laser Controller | Written in: Python 3.5 | Running on: RPi B Rev 2'
+    return 'I14 Laser Controller | Written in: Python 3.5 | Running on: RPi 3 B+'
 
 ##### RULEBOOK FUNCTIONS - INTERLOCK ##########################################
 
 def interlock_status_QUERY():
     if GPIO.input(4) == 0:
-        return 'open'
-    if GPIO.input(4) == 1:
-        return 'closed'
+        return 'OPEN'
+    else:
+        return 'CLOSED'
 
 def interlock_override_QUERY():
     if GPIO.input(17) == 0:
-        return 'off'
-    if GPIO.input(17) == 1:
+        return 'OFF'
+    else:
         return 'on'
 
 ##### RULEBOOK FUNCTIONS - STRICT MODE ########################################
