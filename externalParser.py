@@ -233,13 +233,13 @@ def info_server_QUERY():
 ##### RULEBOOK FUNCTIONS - INTERLOCK ##########################################
 
 def interlock_status_QUERY():
-    if GPIO.input(4) == 0:
+    if GPIO.input(16) == 0:
         return 'OPEN'
     else:
         return 'CLOSED'
 
 def interlock_override_QUERY():
-    if GPIO.input(17) == 0:
+    if GPIO.input(26) == 0:
         return 'OFF'
     else:
         return 'on'
