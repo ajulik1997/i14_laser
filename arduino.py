@@ -16,26 +16,26 @@ import time
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
-GPIO.setup(7, GPIO.OUT)                 ## Arduino reset pin
-GPIO.setup([18, 27, 22], GPIO.OUT)      ## Modulation mode switch signals
-GPIO.setup([23, 24], GPIO.OUT)          ## Operation mode switch signals
+GPIO.setup(25, GPIO.OUT)                ## Arduino reset pin
+GPIO.setup([22, 27, 17], GPIO.OUT)      ## Modulation mode switch signals
+GPIO.setup([16, 26], GPIO.OUT)          ## Operation mode switch signals
 
 ## RESET ARDUINO ##############################################################
 
 def reset():
     '''RESETS ARDUINO TO KNOWN STATE AND PREPARES FOR COMMUNICATION'''
-    
+
     try:
         subprocess.run("stty -F /dev/ttyACM0 -hupcl", shell=True, check=True)
     except subprocess.CalledProcessError as e:
         return (['35', str(e)])
 
-    GPIO.output(7, GPIO.HIGH)
-    time.sleep(0.1)
-    GPIO.output(7, GPIO.LOW)
+    GPIO.output([22, 27, 17], GPIO.LOW)
+    GPIO.output([16, 26], GPIO.LOW)
 
-    GPIO.output([18, 27, 22], GPIO.LOW)
-    GPIO.output([23, 24], GPIO.LOW)
+    GPIO.output(25, GPIO.HIGH)
+    time.sleep(0.1)
+    GPIO.output(25, GPIO.LOW)
 
 ## PRIVATE FUNCTIONS ##########################################################
 
@@ -63,34 +63,34 @@ def sendSerial(string, path='/dev/ttyACM0'):
 def setLaserPower(pwr):
     '''
     Sets power of laser via Serial port
-    
+
     Arguments:
         pwr <float> [0.0 - 100.0] - laser power as a percentage
-    
+
     Returns:
         Error codes (see local file errors.txt)
     '''
-    
+
     return(sendSerial("A" + str(pwr)))
 
 
 def setOperationMode(mode):
     '''
     Sets the operation mode of laser via GPIO
-    
+
     Arguments:
         mode <str> - string describing operation mode of laser
             gated:  laser is triggered via camera GPIO
             master: camera is triggered via laser GPIO
             indep:  laser and camera operate independently
-        
+
     Returns:
         none
     '''
 
-    if mode == 'gated':  GPIO.output([23, 24], (GPIO.HIGH, GPIO.LOW))
-    if mode == 'master': GPIO.output([23, 24], (GPIO.LOW,  GPIO.HIGH))
-    if mode == 'indep':  GPIO.output([23, 24], (GPIO.HIGH, GPIO.HIGH))
+    if mode == 'gated':  GPIO.output([16, 26], (GPIO.HIGH, GPIO.LOW))
+    if mode == 'master': GPIO.output([16, 26], (GPIO.LOW,  GPIO.HIGH))
+    if mode == 'indep':  GPIO.output([16, 26], (GPIO.HIGH, GPIO.HIGH))
 
     
 def setTriggerThreshold(pwr):
@@ -103,14 +103,14 @@ def setTriggerThreshold(pwr):
     Returns:
         Error codes (see local file errors.txt)
     '''
-    
+
     return(sendSerial("T" + str(pwr)))
 
 
 def setModulationMode(mode, period, delay):
     '''
     Sets modulation mode of laser via GPIO and Serial port
-    
+
     Arguments:
         mode <str> - string describing modulation mode of laser
             none: laser is modulated to produce a constant output
@@ -121,16 +121,16 @@ def setModulationMode(mode, period, delay):
             pulse: laser repeatedly pulses for specified time (period) then waits (delay)
         period <float> [0.0 - 3,600,000.0] - milliseconds of period of one cycle
         delay <float> [0.0 - 3,600,000.0] - milliseconds of delay between cycles
-    
+
     Returns:
         Error codes (see local file errors.txt)
     '''
-    
-    if mode == 'none':     GPIO.output([18, 27, 22], (GPIO.LOW,  GPIO.LOW,  GPIO.LOW))
-    if mode == 'sine':     GPIO.output([18, 27, 22], (GPIO.LOW,  GPIO.LOW,  GPIO.HIGH))
-    if mode == 'square':   GPIO.output([18, 27, 22], (GPIO.LOW,  GPIO.HIGH, GPIO.LOW))
-    if mode == 'triangle': GPIO.output([18, 27, 22], (GPIO.LOW,  GPIO.HIGH, GPIO.HIGH))
-    if mode == 'sawtooth': GPIO.output([18, 27, 22], (GPIO.HIGH, GPIO.LOW,  GPIO.LOW))
-    if mode == 'pulse':    GPIO.output([18, 27, 22], (GPIO.HIGH, GPIO.HIGH, GPIO.HIGH))
-    
+
+    if mode == 'none':     GPIO.output([22, 27, 17], (GPIO.LOW,  GPIO.LOW,  GPIO.LOW))
+    if mode == 'sine':     GPIO.output([22, 27, 17], (GPIO.LOW,  GPIO.LOW,  GPIO.HIGH))
+    if mode == 'square':   GPIO.output([22, 27, 17], (GPIO.LOW,  GPIO.HIGH, GPIO.LOW))
+    if mode == 'triangle': GPIO.output([22, 27, 17], (GPIO.LOW,  GPIO.HIGH, GPIO.HIGH))
+    if mode == 'sawtooth': GPIO.output([22, 27, 17], (GPIO.HIGH, GPIO.LOW,  GPIO.LOW))
+    if mode == 'pulse':    GPIO.output([22, 27, 17], (GPIO.HIGH, GPIO.HIGH, GPIO.HIGH))
+
     return(sendSerial("P" + str(period) + ' ' + "D" + str(delay)))
