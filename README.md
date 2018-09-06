@@ -301,23 +301,19 @@ At this point, the service should be set up to execute our script at boot. To te
 
 #### Python
 
-3.5.3
-
-Quickly look at which packages need to be installed. What version of Python. How to install without internet, etc etc
-
-RPi.GPIO
-subprocess ?
-serial ?
-time ?
-What version? What packages?
-socket
+The server for the Raspberry Pi was written in `Python3` and tested on `3.5.3`, which was the version that came preinstalled with operating system. The list of non-trivial libraries that the server and parser depend on are:
 
 - `RPi.GPIO`: for control of GPIO pins
 - `serial`: for serial communication with connected devices
 - `socket`: needed for accessing the BSD socket interface
 - `threading`: needed for a threaded server
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Out of these, `RPi.GPIO` and `serial` are not included in Python's Standard Library (`RPi.GPIO`, however, comes preinstalled for `Python2` with Raspberry Pi). These libraries will need to be installed manually:
+
+```shell
+sudo apt-get install python3-rpi.gpio
+sudo apt-get install python3-serial
+```
 
 #### Pin Assignment
 
@@ -345,18 +341,18 @@ A large number of the GPIO pins available to us are, or can be, used for other p
 |           13          |          3          |         UNASSIGNED        |                |                                              Used by the Raspberry Pi for Hardware PWM                                              |
 |           14          |          8          |         UNASSIGNED        |                |                                                  Used by the Raspberry Pi for UART                                                  |
 |           15          |          10         |         UNASSIGNED        |                |                                                  Used by the Raspberry Pi for UART                                                  |
-|           16          |          36         |  SAFETY INTERLOCK STATUS  |      INPUT     |                                             Monitors the status of the safety interlock                                             |
-|           17          |          11         |  MODULATION MODE SELECTOR |     OUTPUT     | A combination of 3 Modulation Mode Selector pins will signal the Arduino to output one of the corresponding preprogramed waveforms |
+|           16          |          36         |  SAFETY INTERLOCK STATUS  |     OUTPUT     |     A combination of 2 of the Operation Mode Selector pins will signal the Arduino to switch to the corresponding operation mode    |
+|           17          |          11         |  MODULATION MODE SELECTOR |     OUTPUT     | A combination of 3 Modulation Mode Selector pins will signal the Arduino to output one of the corresponding preprogrammed waveforms |
 |           18          |          12         |         UNASSIGNED        |                |                                                  Used by the Raspberry Pi for UART                                                  |
 |           19          |          35         |         UNASSIGNED        |                |                                                   Used by the Raspberry Pi for SPI                                                  |
 |           20          |          38         |         UNASSIGNED        |                |                                                   Used by the Raspberry Pi for SPI                                                  |
 |           21          |          40         |         UNASSIGNED        |                |                                                   Used by the Raspberry Pi for SPI                                                  |
-|           22          |          15         |  MODULATION MODE SELECTOR |     OUTPUT     | A combination of 3 Modulation Mode Selector pins will signal the Arduino to output one of the corresponding preprogramed waveforms |
-|           23          |          16         |  OPERATION MODE SELECTOR  |     OUTPUT     |     A combination of 2 of the Operation Mode Selector pins will signal the Arduino to switch to the corresponding operation mode    |
-|           24          |          18         |  OPERATION MODE SELECTOR  |     OUTPUT     |     A combination of 2 of the Operation Mode Selector pins will signal the Arduino to switch to the corresponding operation mode    |
+|           22          |          15         |  MODULATION MODE SELECTOR |     OUTPUT     | A combination of 3 Modulation Mode Selector pins will signal the Arduino to output one of the corresponding preprogrammed waveforms |
+|           23          |          16         |  OPERATION MODE SELECTOR  |      INPUT     |                                             Monitors the status of the safety interlock                                             |
+|           24          |          18         |  OPERATION MODE SELECTOR  |      INPUT     |                                         Monitors the status of the safety interlock override                                        |
 |           25          |          22         |       ARDUINO RESET       |     OUTPUT     |                           Turning on this pin will reset the Arduino and bring back to a known safe state                           |
-|           26          |          37         | INTERLOCK OVERRIDE STATUS |      INPUT     |                                         Monitors the status of the Safety Interlock Override                                        |
-|           27          |          13         |  MODULATION MODE SELECTOR |     OUTPUT     | A combination of 3 Modulation Mode Selector pins will signal the Arduino to output one of the corresponding preprogramed waveforms |
+|           26          |          37         | INTERLOCK OVERRIDE STATUS |     OUTPUT     |     A combination of 2 of the Operation Mode Selector pins will signal the Arduino to switch to the corresponding operation mode    |
+|           27          |          13         |  MODULATION MODE SELECTOR |     OUTPUT     | A combination of 3 Modulation Mode Selector pins will signal the Arduino to output one of the corresponding preprogrammed waveforms |
 
 ### Laser
 
@@ -480,21 +476,57 @@ The DAC receives data from the Ardino using the I2C interface, where the DAC is 
 
 #### Safety
 
-The DAC's 5V input, instead of being connected directly to Arduino's 5V output, is connected to a logical OR gate (documentation)
+Instead of the DAC being connected directly to Arduino's 5V output, it is powered through a logical OR gate (see [datasheet](http://www.ti.com/lit/ds/symlink/cd54hc32.pdf)) which takes two inputs: safety interlock, and interlock override. If the safety interlock is open (safety interlock line goes LOW), and the interlock override is not switched on (override line is also LOW), the gate will switch off the 5V output. As the DAC loses power, it can no longer output any signal, thereby modulating the laser beam to zero.
 
-when it switches off
-
-resume to a safe state after it has been switched off EEPROM
-
-Pin assignment!
+Additionally, once the DAC's power returns (either the interlock is closed or the override is turned on), the DAC's EEPROM has been set up so that it resumes to a safe state (output of 0V). The DAC will therefore have to be explicitly told to restart modulating the laser.
 
 #### Laser Modulation
 
-<Oscilloscope>
+The Arduino has been programmed with 6 different modulation modes. If modulation is set to `none`, a waveform will not be generated, but a continuous wave of adjustable amplitude will be outputted. At an amplitude of 100%, the laser output looks like the image below, and looks analogous to how it operated before this project.
 
-Talk about physical and software maximums / minimums and why you should not cross them (show borderline cases)
+![Oscilloscope_none_100](resources\images\oscilloscope\final\TEK00000.PNG)
 
-http://www.ti.com/lit/ds/symlink/cd54hc32.pdf
+The amplitude of the continuous wave can be set to any value between 0% and 100%. Here is the oscilloscope output for a continuous wave, this time at 42% amplitude.
+
+![Oscilloscope_none_42](resources\images\oscilloscope\final\TEK00001.PNG)
+
+The second modulation mode is `sine`. This mode generates a sine wave with a custom amplitude and period. The image below shows a sine wave at 100% amplitude with a period of exactly 100 milliseconds.
+
+![Oscilloscope_sine_100](resources\images\oscilloscope\final\TEK00003.PNG)
+
+The amplitude of any wave can be changed. For the sake of brevity, not every waveform will be included with a range of amplitudes in this documentation. The following image is also a 100 millisecond sine wave, but this time with an amplitude of about 42%
+
+![Oscilloscope_sine_42](resources\images\oscilloscope\final\TEK00004.PNG)
+
+An additional parameter can be specified for any wave: the delay between every successive cycle. The wave below is a 100ms period wave with a delay of 200ms between waves, creating a total period of exactly 300ms.
+
+![Oscilloscope_sine_100_wait](resources\images\oscilloscope\final\TEK00005.PNG)
+
+If the operation mode of the Arduino is set to `master`, then the Arduino will output a HIGH when the amplitude of a wave reaches a user-defined threshold. This output, shown in blue, can be used to synchronise the laser modulation with the shutter of a camera (for example, only exposing when the laser is illuminating the sample adequately).
+
+![Oscilloscope_sine_100_threshold_50](resources\images\oscilloscope\final\TEK00006.PNG)
+
+The previous image showed the trigger threshold at 50%. The following image shows the behaviour when the threshold is raised to 80%
+
+![Oscilloscope_sine_100_threshold_80](resources\images\oscilloscope\final\TEK00007.PNG)
+
+The period of the sine wave can be as high as 1 second. The image below shows this wave being generated fairly accurately, only 1.1% above the target period. Periods higher than 1 second are disabled, as above this value, you should consider switching to continuous-wave mode.
+
+![Oscilloscope_sine_100_1s](resources\images\oscilloscope\final\TEK00008.PNG)
+
+The period of the sine wave can also pushed a lot lower than 100ms, but with some disadvantages. The image below shows a sine wave with a target period of 10ms, with a true value of 0.9% above the target. The wave is no longer smooth, and the time it takes for the DAC to update the voltage and the Arduino to calculate the next point on the wave becomes visible.
+
+![Oscilloscope_sine_100_10ms](resources\images\oscilloscope\final\TEK00009.PNG)
+
+When this period is pushed even lower, the generated wave looks less like a sine wave and instead resembles a triangle wave. The target period of this wave is 2ms, but it is being generated with a period 16.7% higher than the target - a value no longer considered acceptably accurate.
+
+![Oscilloscope_sine_100_10ms](resources\images\oscilloscope\final\TEK00010.PNG)
+
+At the smallest possible period, the wave is no longer a sine wave. The square wave generated below is a sine wave with a target period of 1ms. The actual period is also 32.7% larger than the target. Due to this increase in inaccuracies with decreasing period targets, periods under 10ms are considered "inaccurate", and should only be used if this inaccuracy is not a problem.
+
+![Oscilloscope_sine_100_1ms](resources\images\oscilloscope\final\TEK00011.PNG)
+
+Boundary 10ms
 
 ### Camera
 
