@@ -12,7 +12,7 @@
 import RPi.GPIO as GPIO                 ## for GPIO control
 from BioRay import laser                ## EXTERNAL BIORAY SERIAL CONTROLLER
 from errors import return_code          ## EXTERNAL RETURN CODE DICTIONARY
-import arduino                            ## Arduino laser controller
+import arduino                          ## Arduino laser controller
 
 ##### GLOBAL VARS #############################################################
 
@@ -21,7 +21,7 @@ LASER_MODE = 'indep'            ## reset laser mode to independent operation
 LASER_MODULATION = 'none'       ## reset modulation to none (no modulation)
 LASER_MODULATION_PERIOD = 0     ## reset modulation period to default
 LASER_MODULATION_DELAY = 0      ## reset modulation LASER_MODULATION_DELAY to default
-LASER_TRIGGER_THRESHOLD = 50    ## reset camera trigger threshold to default
+LASER_TRIGGER_THRESHOLD = 0     ## reset camera trigger threshold to default
 
 STRICT_MODE = True
 
@@ -33,16 +33,14 @@ GPIO.setwarnings(False)
 GPIO.setup([16,26], GPIO.IN) ## 16: INTERLOCK; 26: INTERLOCK_OVERRIDE
 
 arduino.reset()
-arduino.setOperationMode('indep')
-arduino.setModulationMode('none', 0, 0)
 
 ##### SAFETY CHECKS ###########################################################
 
 def interlock_check():
     '''Returns interlock and override status'''
 
-    if GPIO.input(4) == 1: return '00'     ## interlock closed
-    if GPIO.input(17) == 1: return '04'    ## interlock open, override on
+    if GPIO.input(16) == 1: return '00'    ## interlock closed
+    if GPIO.input(26) == 1: return '04'    ## interlock open, override on
     return '90'                            ## interlock open, override off
 
 ##### ARGUMENT CHECKS #########################################################
@@ -89,8 +87,8 @@ def command(test_args, known_args):                                             
     i_check = interlock_check()
     warn_list = []
 
-    if a_check != '00': return a_check   ## arguments are not good
-    if i_check == '90': return i_check   ## ilock open, override off
+    if a_check != '00': return a_check          ## arguments are not good
+    if i_check == '90': return i_check          ## ilock open, override off
     if i_check == '04': warn_list.append('04')  ## append override warning if on
 
 ##### RULEBOOK FUNCTIONS - LASER ##############################################
@@ -177,6 +175,12 @@ def laser_modulation_CMD(args):
 def laser_modulation_QUERY():
     return ''
 
+def laser_trigger_threshold_CMD():
+    return ''
+
+def laser_trigger_threshold_QUERY():
+    return ''
+
 ##### RULEBOOK FUNCTIONS - POWER, AMPS, TEMP ##################################
 
 def power_now_QUERY():
@@ -237,35 +241,38 @@ def strict_mode_QUERY():
 
 def parse(args):
     rulebook = {
-        'LASER_MAINS'         : laser_mains_CMD(args[1:]),
-        '?LASER_MAINS'        : laser_mains_QUERY(),
-        'LASER_POWER'         : laser_power_CMD(args[1:]),
-        '?LASER_POWER'        : laser_power_QUERY(),
-        '?LASER_STATUS'       : laser_status_QUERY(),
-        '?LASER_FAULT'        : laser_fault_QUERY(),
-        'LASER_MODE'          : laser_mode_CMD(args[1:]),
-        '?LASER_MODE'         : laser_mode_QUERY(),
-        'LASER_MOD_POLARITY'  : laser_mod_polarity_CMD(args[1:]),
-        '?LASER_MOD_POLARITY' : laser_mod_polarity_QUERY(),
-        'LASER_MODULATION'    : laser_modulation_CMD(args[1:]),
-        '?LASER_MODULATION'   : laser_modulation_QUERY(),
+        'LASER_MAINS'              : laser_mains_CMD(args[1:]),
+        '?LASER_MAINS'             : laser_mains_QUERY(),
+        'LASER_POWER'              : laser_power_CMD(args[1:]),
+        '?LASER_POWER'             : laser_power_QUERY(),
+        '?LASER_STATUS'            : laser_status_QUERY(),
+        '?LASER_FAULT'             : laser_fault_QUERY(),
+        'LASER_MODE'               : laser_mode_CMD(args[1:]),
+        '?LASER_MODE'              : laser_mode_QUERY(),
+        'LASER_MOD_POLARITY'       : laser_mod_polarity_CMD(args[1:]),
+        '?LASER_MOD_POLARITY'      : laser_mod_polarity_QUERY(),
+        'LASER_MODULATION'         : laser_modulation_CMD(args[1:]),
+        '?LASER_MODULATION'        : laser_modulation_QUERY(),
         #######################
-        '?POWER_NOW'          : power_now_QUERY(),
-        '?POWER_MAX'          : power_max_QUERY(),
-        '?POWER_NOM'          : power_nom_QUERY(),
-        '?AMPS_NOW'           : amps_now_QUERY(),
-        '?TEMP_INTERNAL_NOW'  : temp_internal_now_QUERY(),
-        '?TEMP_DIODE_NOW'     : temp_diode_now_QUERY(),
-        '?TEMP_DIODE_MAX'     : temp_diode_max_QUERY(),
-        '?TEMP_DIODE_MIN'     : temp_diode_min_QUERY(),
+        'LASER_TRIGGER_THRESHOLD'  : laser_trigger_threshold_CMD(args[1:]),
+        '?LASER_TRIGGER_THRESHOLD' : laser_trigger_threshold_QUERY(),
         #######################
-        '?INFO_LASER'         : info_laser_QUERY(),
-        '?INFO_SERVER'        : info_server_QUERY(),
+        '?POWER_NOW'               : power_now_QUERY(),
+        '?POWER_MAX'               : power_max_QUERY(),
+        '?POWER_NOM'               : power_nom_QUERY(),
+        '?AMPS_NOW'                : amps_now_QUERY(),
+        '?TEMP_INTERNAL_NOW'       : temp_internal_now_QUERY(),
+        '?TEMP_DIODE_NOW'          : temp_diode_now_QUERY(),
+        '?TEMP_DIODE_MAX'          : temp_diode_max_QUERY(),
+        '?TEMP_DIODE_MIN'          : temp_diode_min_QUERY(),
         #######################
-        '?INTERLOCK_STATUS'   : interlock_status_QUERY(args[1:]),
-        '?INTERLOCK_OVERRIDE' : interlock_override_QUERY(),
+        '?INFO_LASER'              : info_laser_QUERY(),
+        '?INFO_SERVER'             : info_server_QUERY(),
         #######################
-        'STRICT_MODE'          : strict_mode_CMD(),
-        '?STRICT_MODE'          : strict_mode_QUERY()
+        '?INTERLOCK_STATUS'        : interlock_status_QUERY(args[1:]),
+        '?INTERLOCK_OVERRIDE'      : interlock_override_QUERY(),
+        #######################
+        'STRICT_MODE'               : strict_mode_CMD(),
+        '?STRICT_MODE'              : strict_mode_QUERY()
     }
     return rulebook.get(args[0], return_code('20'))
