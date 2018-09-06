@@ -101,7 +101,7 @@ sudo raspi-config
 
 You will be presented with a terminal user interface (TUI) similar to the one below:
 
-![raspi-config](.resources\images\readme\raspi-config.PNG)
+![raspi-config](resources\images\readme\raspi-config.PNG)
 
 The settings that will need be changed are:
   - **Change User Password**: change the user password so that it is not possible to start an SSH session with the Raspberry Pi using the default password
