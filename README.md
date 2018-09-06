@@ -556,17 +556,24 @@ The following data gives the exact limits applied to the selection of the period
 The camera used in this project is the [Alled Vison Manta](https://www.alliedvision.com/fileadmin/content/documents/products/cameras/Manta/techman/Manta_TechMan.pdf
 ). It uses the Hirose HR10-10R-12PA(73) connector, for which we used the Hirose HR10A-10P-12S breakout cable. The pin numbering for the Hirose cable can be seen below:
 
-![Hirose](resources/images/readme/hirose.PNG | width=100)
+![Hirose](resources/images/readme/hirose.PNG)
 
-According to the input diagram
+According to the input block diagram below (as well as Figure 109 in the documentation), both pins `In1` and `In2` are available as general purpose input pins, when connected to some isolated ground.
 
 ![Camera Input](resources/images/readme/camera_input.PNG)
 
+Similarly, the output block diagram below (as well as Figure 111 in the documentation) shows that pins `Out1` and `Out2` are available to use as general purpose output pins when the block is connected to some isolated power source, and the pins are pulled LOW using pull-down resistors. If the isolated power input is 5V, then both GPO pins will also signal at 5V.
+
 ![Camera Output](resources/images/readme/camera_output.PNG)
 
-add pin assignment section, just like I wrote on the paper!
+With this knowledge, it is possible to create a pin assignment table:
 
-
+| Pin Number | Signal           | Assignment                                                                                                                          |
+|------------|------------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| 4          | `In1`            | This pin can receive signal from the Arduino, and will synchronise the shutter of the camera with respect to the modulation waveform |
+| 6          | `Out1`           | This pin will receive signal when a generated waveform amplitude reaches a threshold, triggering the shutter of the camera           |
+| 7          | Isolated In GND  | This pin is tied to Arduino's GND pin                                                                                                |
+| 10         | Isolated Out PWR | This pin is tied to Arduino's 5V pin                                                                                                 |
 
 ## The Software
 
