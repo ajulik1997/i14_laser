@@ -131,15 +131,15 @@ def laser_mains_QUERY():
     '''Queries whether laser is ON or OFF'''
 
     return query(laser("SOUR:AM:STAT?"))
-###########################!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 #######################################
 
 def laser_power_CMD(args):
     '''Sets amplitude of laser beam'''
 
-    check = "'01' if float(args[0]) == LASER_POWER else '00'"
-    final = "arduino.setLaserPower(float(args[0]))"
-    update = "LASER_POWER = float(args[0])"
+    check = "'01' if float(test_args[0]) == LASER_POWER else '00'"
+    final = "arduino.setLaserPower(float(test_args[0]))"
+    update = "LASER_POWER = float(test_args[0])"
     result = command(args, [[0, 100]], final, update, check)
 
     return return_code(result)
