@@ -115,7 +115,7 @@ def command(test_args, known_args, on_success, *additional_checks):
 def laser_mains_CMD(args):
     '''Switches laser ON or OFF'''
 
-    check = "if args[0].upper() == laser('SOUR:AM:STAT?')[-1]: return('01')"
+    check = "if args[0].upper() == laser('SOUR:AM:STAT?')[-1]: return('01'); else return('00')"
     command = "laser('SOUR:AM:STAT '+args[0].upper())"
     result = command(args, [['ON', 'OFF']], command, check)
 
@@ -130,7 +130,7 @@ def laser_mains_QUERY():
 
 #######################################
 
-def laser_power_CMD(args):                                                                ### WILL BE DONE OVER ARDUINO NOW
+def laser_power_CMD(args):
     '''Sets amplitude of laser beam'''
 
     check = "if args[0] == LASER_POWER: return('01')"
@@ -157,9 +157,10 @@ def laser_fault_QUERY():
 def laser_mode_CMD(args):
     '''Sets laser operation mode'''
 
-    check = "if args[0] == LASER_MODE: return('01')"
-    command = "LASER_MODE = args[0]; arduino.setOperationMode(LASER_MODE)"
-    result = command(args, [['gated', 'master', 'indep']], command, check)
+    check_1 = "if (args[0].lower() == 'gated' and (LASER_MODULATION not in ['square', 'pulse'])): return('26'); else: return('00')"
+    check_2 = "if args[0].lower() == LASER_MODE: return('01')"
+    command = "LASER_MODE = args[0].lower(); arduino.setOperationMode(LASER_MODE)"
+    result = command(args, [['GATED', 'MASTER', 'INDEP']], command, check_1, check_2)
 
     return return_code(result)
 
@@ -183,6 +184,8 @@ def laser_mod_polarity_QUERY():
     return query(laser("SYST:AM:MPOL?"))
 
 def laser_modulation_CMD(args):
+
+    check_2 = "if (args[0].lower() == LASER_MODULATION and args[1] == LASER_MODULATION_PERIOD and args[2] == LASER_MODULATION_DELAY: return('00')"
     #a_check = argument_check(args, [['sine', 'square', 'triangle', 'sawtooth', 'full'],
     #                                [0, 10000],
     #                                [0, 100]])

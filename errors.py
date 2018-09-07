@@ -39,6 +39,7 @@ def return_code(obj):
         "23" : '23 : One or more provided argument(s) not recognized',
         "24" : '24 : One or more provided argument(s) are not of expected type',
         "25" : '25 : One or more provided argument(s) are not in range',
+        "26" : '26 : Operation mode is not compatible with current modulation mode',
         ##### 3X : TTY PORT ERRORS ################################################
         "30" : '30 : Unexpected TTY port error',                            # {+++}
         "31" : '31 : Unable to connect to specified TTY port',              # {+++}
