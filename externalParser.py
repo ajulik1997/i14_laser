@@ -105,7 +105,7 @@ def command(test_args, known_args, on_success, variable_update, *additional_chec
     ## if action does not need carrying out, skip it
     if int(warnings)%2 == 0:
         result_of_eval = eval(on_success)
-        if type(results_of eval) is list:
+        if type(result_of_eval) is list:
             if result_of_eval[0] != '00': return result_of_eval
         else:
             if result_of_eval != '00': return result_of_eval
@@ -119,7 +119,7 @@ def command(test_args, known_args, on_success, variable_update, *additional_chec
 def laser_mains_CMD(args):
     '''Switches laser ON or OFF'''
 
-    check = "'01' if test_args[0].upper() == laser_mains_QUERY() else '00'"
+    check = "'01' if test_args[0].upper() == laser('SOUR:AM:STAT?')[1] else '00'"
     final = "laser('SOUR:AM:STAT '+test_args[0].upper())"
     result = command(args, [['ON', 'OFF']], final, None, check)
 
