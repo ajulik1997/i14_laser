@@ -95,19 +95,22 @@ def command(test_args, known_args, on_success, variable_update, *additional_chec
     if a_check[0] != '0': return a_check        ## arguments are not good
     if i_check[0] != '0': return i_check        ## ilock open, override off
     warnings = "{:02}".format(str(int(warnings) + int(a_check) + int(i_check)))
-
+    print("1")
     ## run aditional checks as requested
     for check in additional_checks:
         status = eval(check)
+        print("2")
         if status[0] != '0': return status
         warnings = "{:02}".format(str(int(warnings) + int(status)))
-
+    print("3")
     ## if action does not need carrying out, skip it
     if int(warnings)%2 == 0:
         result_of_eval = eval(on_success)
+        print(result_of_eval)
         if result_of_eval != '00': return result_of_eval
 
     ## if you got here, only warnings or success
+    print("4")
     if variable_update != None: exec(variable_update)
     return warnings
 
