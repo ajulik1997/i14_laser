@@ -83,7 +83,7 @@ def query(list):
 
 ##### COMMAND HANDLER #########################################################
 
-def command(test_args, known_args, on_success, *additional_checks):
+def command(test_args, known_args, on_success, variable_update, *additional_checks):
     '''GENERIC COMMAND PROCESSOR'''
 
     ## check arguments and interlock
@@ -104,10 +104,11 @@ def command(test_args, known_args, on_success, *additional_checks):
 
     ## if action does not need carrying out, skip it
     if int(warnings)%2 == 0:
-        result_of_exec = exec(on_success)
-        if result_of_exec != '00': return result_of_exec
+        result_of_eval = eval(on_success)
+        if result_of_eval != '00': return result_of_eval
 
     ## if you got here, only warnings or success
+    if variable_update != None: exec(variable_update)
     return warnings
 
 ##### RULEBOOK FUNCTIONS - LASER ##############################################
@@ -117,7 +118,7 @@ def laser_mains_CMD(args):
 
     check = "'01' if args[0].upper() == laser('SOUR:AM:STAT?')[-1] else '00'"
     command = "laser('SOUR:AM:STAT '+args[0].upper())"
-    result = command(args, [['ON', 'OFF']], command, check)
+    result = command(args, [['ON', 'OFF']], command, None, check)
 
     return return_code(result)
 
@@ -133,9 +134,10 @@ def laser_mains_QUERY():
 def laser_power_CMD(args):
     '''Sets amplitude of laser beam'''
 
-    check = "'01' if args[0] == LASER_POWER else '00')"
-    command = "LASER_POWER = args[0]; arduino.setLaserPower(LASER_POWER)"
-    result = command(args, [[0, 100]], command, check)
+    check = "'01' if float(args[0]) == LASER_POWER else '00')"
+    final = "arduino.setLaserPower(float(args[0]))"
+    update = "LASER_POWER = float(args[0])"
+    result = command(args, [[0, 100]], final, check)
 
     return return_code(result)
 
@@ -143,7 +145,7 @@ def laser_power_QUERY():
     '''Gets amplitude of laser beam'''
 
     return (str(LASER_POWER)+'\r\n').encode(encoding='ascii')
-
+#######################
 def laser_status_QUERY():
     '''Gets laser status code'''
 
@@ -159,8 +161,8 @@ def laser_mode_CMD(args):
 
     check_1 = "'26' if (args[0].lower() == 'gated' and (LASER_MODULATION not in ['square', 'pulse'])) else '00'"
     check_2 = "'01' args[0].lower() == LASER_MODE else '00')"
-    command = "LASER_MODE = args[0].lower(); arduino.setOperationMode(LASER_MODE)"
-    result = command(args, [['GATED', 'MASTER', 'INDEP']], command, check_1, check_2)
+    final = "LASER_MODE = args[0].lower(); arduino.setOperationMode(LASER_MODE)"
+    result = command(args, [['GATED', 'MASTER', 'INDEP']], final, check_1, check_2)
 
     return return_code(result)
 
@@ -173,8 +175,8 @@ def laser_mod_polarity_CMD(args):
     '''Sets laser modulation polarity'''
 
     check = "'01' if args[0].upper() == laser('SOUR:AM:MPOL?') else '00')"
-    command = "laser('SOUR:AM:MPOL '+args[0].upper())"
-    result = command(args, [['PASS', 'INVERT']], command, check)
+    final = "laser('SOUR:AM:MPOL '+args[0].upper())"
+    result = command(args, [['PASS', 'INVERT']], final, check)
 
     return return_code(result)
 
@@ -188,7 +190,8 @@ def laser_modulation_CMD(args):
 
     check_1 = "'26' if (LASER_MODE == 'gated' and (args[0].lower() not in ['square', 'pulse']) else '00'"
     check_2 = "'25' if (args[0].lower in ['sine', 'triangle', 'sawtooth'] and (args[1] > 1000 or args[2] > 1000)) else '00'"
-    check_3 = "'01' if (args[0].lower() == LASER_MODULATION and args[1] == LASER_MODULATION_PERIOD and args[2] == LASER_MODULATION_DELAY else '00'"
+    check_3 = "'01' if (args[0].lower() == LASER_MODULATION and args[1] == LASER_MODULATION_PERIOD and args[2] == LASER_MODULATION_DELAY) else '00'"
+    final =
     result = command(args, [['none', 'sine', 'square', 'triangle', 'sawtooth', 'pulse'],[0, 3600000],[0, 3600000]])
 
     return return_code(result)
