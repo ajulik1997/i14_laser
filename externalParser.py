@@ -117,8 +117,8 @@ def laser_mains_CMD(args):
     '''Switches laser ON or OFF'''
 
     check = "'01' if args[0].upper() == laser('SOUR:AM:STAT?')[-1] else '00'"
-    command = "laser('SOUR:AM:STAT '+args[0].upper())"
-    result = command(args, [['ON', 'OFF']], command, None, check)
+    final = "laser('SOUR:AM:STAT '+args[0].upper())"
+    result = command(args, [['ON', 'OFF']], final, None, check)
 
     return return_code(result)
 
@@ -137,7 +137,7 @@ def laser_power_CMD(args):
     check = "'01' if float(args[0]) == LASER_POWER else '00')"
     final = "arduino.setLaserPower(float(args[0]))"
     update = "LASER_POWER = float(args[0])"
-    result = command(args, [[0, 100]], final, check)
+    result = command(args, [[0, 100]], final, update, check)
 
     return return_code(result)
 
@@ -145,7 +145,7 @@ def laser_power_QUERY():
     '''Gets amplitude of laser beam'''
 
     return (str(LASER_POWER)+'\r\n').encode(encoding='ascii')
-#######################
+#######################!!!!!!
 def laser_status_QUERY():
     '''Gets laser status code'''
 
@@ -188,11 +188,11 @@ def laser_mod_polarity_QUERY():
 def laser_modulation_CMD(args):
     '''Sets modulation mode, period and delay of laser'''
 
-    check_1 = "'26' if (LASER_MODE == 'gated' and (args[0].lower() not in ['square', 'pulse']) else '00'"
-    check_2 = "'25' if (args[0].lower in ['sine', 'triangle', 'sawtooth'] and (args[1] > 1000 or args[2] > 1000)) else '00'"
-    check_3 = "'01' if (args[0].lower() == LASER_MODULATION and args[1] == LASER_MODULATION_PERIOD and args[2] == LASER_MODULATION_DELAY) else '00'"
-    final =
-    result = command(args, [['none', 'sine', 'square', 'triangle', 'sawtooth', 'pulse'],[0, 3600000],[0, 3600000]])
+    #check_1 = "'26' if (LASER_MODE == 'gated' and (args[0].lower() not in ['square', 'pulse']) else '00'"
+    #check_2 = "'25' if (args[0].lower in ['sine', 'triangle', 'sawtooth'] and (args[1] > 1000 or args[2] > 1000)) else '00'"
+    #check_3 = "'01' if (args[0].lower() == LASER_MODULATION and args[1] == LASER_MODULATION_PERIOD and args[2] == LASER_MODULATION_DELAY) else '00'"
+    #final =
+    #result = command(args, [['none', 'sine', 'square', 'triangle', 'sawtooth', 'pulse'],[0, 3600000],[0, 3600000]])
 
     return return_code(result)
 
