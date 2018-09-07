@@ -94,14 +94,14 @@ def command(test_args, known_args, on_success, variable_update, *additional_chec
     ## analyse results, compile warnings
     if a_check[0] != '0': return a_check        ## arguments are not good
     if i_check[0] != '0': return i_check        ## ilock open, override off
-    warnings = "{:02}".format(str(int(warnings) + int(a_check) + int(i_check)))
+    warnings = "{0:0=2d}".format(int(warnings) + int(a_check) + int(i_check))
     print("1")
     ## run aditional checks as requested
     for check in additional_checks:
         status = eval(check)
         print("2")
         if status[0] != '0': return status
-        warnings = "{:02}".format(str(int(warnings) + int(status)))
+        warnings = "{0:0=2d}".format(int(warnings) + int(status))
     print("3")
     ## if action does not need carrying out, skip it
     if int(warnings)%2 == 0:
@@ -119,7 +119,7 @@ def command(test_args, known_args, on_success, variable_update, *additional_chec
 def laser_mains_CMD(args):
     '''Switches laser ON or OFF'''
 
-    check = "'01' if args[0].upper() == laser('SOUR:AM:STAT?')[-1] else '00'"
+    check = "'01' if test_args[0].upper() == laser_mains_QUERY() else '00'"
     final = "laser('SOUR:AM:STAT '+args[0].upper())"
     result = command(args, [['ON', 'OFF']], final, None, check)
 
@@ -131,7 +131,7 @@ def laser_mains_QUERY():
     '''Queries whether laser is ON or OFF'''
 
     return query(laser("SOUR:AM:STAT?"))
-
+###########################!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #######################################
 
 def laser_power_CMD(args):
