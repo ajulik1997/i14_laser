@@ -137,7 +137,7 @@ def laser_mains_QUERY():
 def laser_power_CMD(args):
     '''Sets amplitude of laser beam'''
 
-    check = "'01' if float(args[0]) == LASER_POWER else '00')"
+    check = "'01' if float(args[0]) == LASER_POWER else '00'"
     final = "arduino.setLaserPower(float(args[0]))"
     update = "LASER_POWER = float(args[0])"
     result = command(args, [[0, 100]], final, update, check)
