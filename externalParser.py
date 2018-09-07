@@ -193,8 +193,8 @@ def laser_modulation_CMD(args):
     #check_3 = "'01' if (args[0].lower() == LASER_MODULATION and args[1] == LASER_MODULATION_PERIOD and args[2] == LASER_MODULATION_DELAY) else '00'"
     #final =
     #result = command(args, [['none', 'sine', 'square', 'triangle', 'sawtooth', 'pulse'],[0, 3600000],[0, 3600000]])
-
-    return return_code(result)
+    return ''
+    #return return_code(result)
 
 def laser_modulation_QUERY():
     '''Gets modulation mode and paramters of laser'''
