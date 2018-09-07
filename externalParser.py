@@ -95,22 +95,19 @@ def command(test_args, known_args, on_success, variable_update, *additional_chec
     if a_check[0] != '0': return a_check        ## arguments are not good
     if i_check[0] != '0': return i_check        ## ilock open, override off
     warnings = "{0:0=2d}".format(int(warnings) + int(a_check) + int(i_check))
-    print("1")
+
     ## run aditional checks as requested
     for check in additional_checks:
         status = eval(check)
-        print("2")
         if status[0] != '0': return status
         warnings = "{0:0=2d}".format(int(warnings) + int(status))
-    print("3")
+
     ## if action does not need carrying out, skip it
     if int(warnings)%2 == 0:
         result_of_eval = eval(on_success)
-        print(result_of_eval)
         if result_of_eval != '00': return result_of_eval
 
     ## if you got here, only warnings or success
-    print("4")
     if variable_update != None: exec(variable_update)
     return warnings
 
@@ -120,7 +117,7 @@ def laser_mains_CMD(args):
     '''Switches laser ON or OFF'''
 
     check = "'01' if test_args[0].upper() == laser_mains_QUERY() else '00'"
-    final = "laser('SOUR:AM:STAT '+args[0].upper())"
+    final = "query(laser('SOUR:AM:STAT '+test_args[0].upper()))"
     result = command(args, [['ON', 'OFF']], final, None, check)
 
     return return_code(result)
