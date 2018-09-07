@@ -201,7 +201,7 @@ def laser_modulation_QUERY():
 
     return (str(LASER_MODULATION)+'\r\n').encode(encoding='ascii')
 
-def laser_trigger_threshold_CMD():
+def laser_trigger_threshold_CMD(args):
     return ''
 
 def laser_trigger_threshold_QUERY():
@@ -299,7 +299,7 @@ def parse(args):
         '?INTERLOCK_STATUS'        : interlock_status_QUERY(args[1:]),
         '?INTERLOCK_OVERRIDE'      : interlock_override_QUERY(),
         #######################
-        'STRICT_MODE'               : strict_mode_CMD(),
-        '?STRICT_MODE'              : strict_mode_QUERY()
+        'STRICT_MODE'              : strict_mode_CMD(),
+        '?STRICT_MODE'             : strict_mode_QUERY()
     }
     return rulebook.get(args[0], return_code('20'))
