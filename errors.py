@@ -55,7 +55,7 @@ def return_code(obj):
     }
 
     if type(obj) is str:
-        if 0 < int(obj) < 10:
+        if (0 < int(obj) < 10 and obj not in ['01', '02', '04']):
             message = obj + ' : More than one warning has occured'
         else:
             message = return_codes.get(obj, '?? : An unknown error code was returned')
