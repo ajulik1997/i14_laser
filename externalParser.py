@@ -305,4 +305,6 @@ def parse(args):
         'STRICT_MODE'              : strict_mode_CMD(args[1:]),
         '?STRICT_MODE'             : strict_mode_QUERY()
     }
-    return rulebook.get(args[0], return_code('20'))
+
+    if args[0] not in rulebook: return return_code('20')
+    return rulebook[args[0]]
