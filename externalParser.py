@@ -90,18 +90,18 @@ def command(test_args, known_args, on_success, variable_update, *additional_chec
     a_check = argument_check(test_args, known_args)
     i_check = interlock_check()
     warnings = '00'
-
+    print("STAGE1")
     ## analyse results, compile warnings
     if a_check[0] != '0': return a_check        ## arguments are not good
     if i_check[0] != '0': return i_check        ## ilock open, override off
     warnings = "{0:0=2d}".format(int(warnings) + int(a_check) + int(i_check))
-
+    print("STAGE2")
     ## run aditional checks as requested
     for check in additional_checks:
         status = eval(check)
         if status[0] != '0': return status
         warnings = "{0:0=2d}".format(int(warnings) + int(status))
-
+    print("STAGE3")
     ## if action does not need carrying out, skip it
     if int(warnings)%2 == 0:
         result_of_eval = eval(on_success)
@@ -109,7 +109,7 @@ def command(test_args, known_args, on_success, variable_update, *additional_chec
             if result_of_eval[0] != '00': return result_of_eval
         else:
             if result_of_eval != '00': return result_of_eval
-
+    print("STAGE4")
     ## if you got here, only warnings or success
     if variable_update != None: exec(variable_update)
     return warnings
@@ -136,7 +136,7 @@ def laser_mains_QUERY():
 
 def laser_power_CMD(args):
     '''Sets amplitude of laser beam'''
-
+    print("SOMEHOW I ENDED UP HERE")
     check = "'01' if float(test_args[0]) == LASER_POWER else '00'"
     final = "arduino.setLaserPower(float(test_args[0]))"
     update = "LASER_POWER = float(test_args[0])"
