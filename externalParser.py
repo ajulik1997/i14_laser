@@ -14,44 +14,6 @@ from BioRay import laser                ## EXTERNAL BIORAY SERIAL CONTROLLER
 from errors import return_code          ## EXTERNAL RETURN CODE DICTIONARY
 import arduino                          ## Arduino laser controller
 
-##### RULEBOOK ################################################################
-
-rulebook = {
-    'LASER_MAINS'              : laser_mains_CMD,
-    '?LASER_MAINS'             : laser_mains_QUERY,
-    'LASER_POWER'              : laser_power_CMD,
-    '?LASER_POWER'             : laser_power_QUERY,
-    '?LASER_STATUS'            : laser_status_QUERY,
-    '?LASER_FAULT'             : laser_fault_QUERY,
-    'LASER_MODE'               : laser_mode_CMD,
-    '?LASER_MODE'              : laser_mode_QUERY,
-    'LASER_MOD_POLARITY'       : laser_mod_polarity_CMD,
-    '?LASER_MOD_POLARITY'      : laser_mod_polarity_QUERY,
-    'LASER_MODULATION'         : laser_modulation_CMD,
-    '?LASER_MODULATION'        : laser_modulation_QUERY,
-    #######################
-    'LASER_TRIGGER_THRESHOLD'  : laser_trigger_threshold_CMD,
-    '?LASER_TRIGGER_THRESHOLD' : laser_trigger_threshold_QUERY,
-    #######################
-    '?POWER_NOW'               : power_now_QUERY,
-    '?POWER_MAX'               : power_max_QUERY,
-    '?POWER_NOM'               : power_nom_QUERY,
-    '?AMPS_NOW'                : amps_now_QUERY,
-    '?TEMP_INTERNAL_NOW'       : temp_internal_now_QUERY,
-    '?TEMP_DIODE_NOW'          : temp_diode_now_QUERY,
-    '?TEMP_DIODE_MAX'          : temp_diode_max_QUERY,
-    '?TEMP_DIODE_MIN'          : temp_diode_min_QUERY,
-    #######################
-    '?INFO_LASER'              : info_laser_QUERY,
-    '?INFO_SERVER'             : info_server_QUERY,
-    #######################
-    '?INTERLOCK_STATUS'        : interlock_status_QUERY,
-    '?INTERLOCK_OVERRIDE'      : interlock_override_QUERY,
-    #######################
-    'STRICT_MODE'              : strict_mode_CMD,
-    '?STRICT_MODE'             : strict_mode_QUERY
-}
-
 ##### GLOBAL VARS #############################################################
 
 LASER_POWER = 0                 ## reset laser power to zero
@@ -304,6 +266,44 @@ def strict_mode_CMD(args):
 
 def strict_mode_QUERY():
     pass
+
+##### RULEBOOK ################################################################
+
+rulebook = {
+    'LASER_MAINS'              : laser_mains_CMD,
+    '?LASER_MAINS'             : laser_mains_QUERY,
+    'LASER_POWER'              : laser_power_CMD,
+    '?LASER_POWER'             : laser_power_QUERY,
+    '?LASER_STATUS'            : laser_status_QUERY,
+    '?LASER_FAULT'             : laser_fault_QUERY,
+    'LASER_MODE'               : laser_mode_CMD,
+    '?LASER_MODE'              : laser_mode_QUERY,
+    'LASER_MOD_POLARITY'       : laser_mod_polarity_CMD,
+    '?LASER_MOD_POLARITY'      : laser_mod_polarity_QUERY,
+    'LASER_MODULATION'         : laser_modulation_CMD,
+    '?LASER_MODULATION'        : laser_modulation_QUERY,
+    #######################
+    'LASER_TRIGGER_THRESHOLD'  : laser_trigger_threshold_CMD,
+    '?LASER_TRIGGER_THRESHOLD' : laser_trigger_threshold_QUERY,
+    #######################
+    '?POWER_NOW'               : power_now_QUERY,
+    '?POWER_MAX'               : power_max_QUERY,
+    '?POWER_NOM'               : power_nom_QUERY,
+    '?AMPS_NOW'                : amps_now_QUERY,
+    '?TEMP_INTERNAL_NOW'       : temp_internal_now_QUERY,
+    '?TEMP_DIODE_NOW'          : temp_diode_now_QUERY,
+    '?TEMP_DIODE_MAX'          : temp_diode_max_QUERY,
+    '?TEMP_DIODE_MIN'          : temp_diode_min_QUERY,
+    #######################
+    '?INFO_LASER'              : info_laser_QUERY,
+    '?INFO_SERVER'             : info_server_QUERY,
+    #######################
+    '?INTERLOCK_STATUS'        : interlock_status_QUERY,
+    '?INTERLOCK_OVERRIDE'      : interlock_override_QUERY,
+    #######################
+    'STRICT_MODE'              : strict_mode_CMD,
+    '?STRICT_MODE'             : strict_mode_QUERY
+}
 
 ##### MAIN ####################################################################
 
