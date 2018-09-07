@@ -296,10 +296,10 @@ def parse(args):
         '?INFO_LASER'              : info_laser_QUERY(),
         '?INFO_SERVER'             : info_server_QUERY(),
         #######################
-        '?INTERLOCK_STATUS'        : interlock_status_QUERY(args[1:]),
+        '?INTERLOCK_STATUS'        : interlock_status_QUERY(),
         '?INTERLOCK_OVERRIDE'      : interlock_override_QUERY(),
         #######################
-        'STRICT_MODE'              : strict_mode_CMD(),
+        'STRICT_MODE'              : strict_mode_CMD(args[1:]),
         '?STRICT_MODE'             : strict_mode_QUERY()
     }
     return rulebook.get(args[0], return_code('20'))
