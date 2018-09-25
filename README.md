@@ -464,6 +464,14 @@ A green "power" LED as well as an RGB "status" LED is used to signal different e
 
 #### Wiring Diagram
 
+This section describes the required wiring between all the components and the Arduino, using photographs of the setup accompanied by a schematic diagram. The wiring of the entire system, [stuff here!!!!], can be seen in the image below, followed by a full schematic.
+
+![Full_Schematic_Image](resources/images/schematics/top1.jpg)
+
+Stuff here
+
+![Full_Schematic](resources/images/schematics/full_schematic.png)
+
 Paste diagram and pictures. Expain diagram. Probably split it into sections
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
