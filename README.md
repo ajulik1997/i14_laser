@@ -27,7 +27,7 @@ The following documentation is designed as a guide to simplify the processes of 
   - [Server](#server)
     - [Client](#client)
   - [Parser](#parser)
-    - [Table of Recognized Commands](#table-of-recognized-commands)
+    - [Table of Recognised Commands](#table-of-recognized-commands)
   - [Error Handler](#error-handler)
     - [Table of Errors and Warnings](#table-of-errors-and-warnings)
   - [Laser Serial Communication Script](#laser-serial-communication-script)
@@ -40,7 +40,7 @@ The following documentation is designed as a guide to simplify the processes of 
 
 ## Introduction
 
-At the core of this "system" lies a [Raspberry Pi](https://www.raspberrypi.org/), used as a server running a python script which allows it to process text-based commands that it receives over network. A [Coherent Laser](https://www.coherent.com/) is connected to the Raspberry Pi via a USB-to-Serial interface, enabling the Pi to send commands to the laser and monitor its status. An [Arduino board](https://www.arduino.cc/) is also connected to the Raspberry Pi via a USB-to-Serial as well as a GPIO interface, and is mainly responsible for real-time generation of waveforms that are used to modulate the laser via a Digital-to-Analog converter (DAC). Additionally, a camera can also be connected to the Arduino, which can synchronize the camera's shutter with the modulation of the laser.
+At the core of this "system" lies a [Raspberry Pi](https://www.raspberrypi.org/), used as a server running a python script which allows it to process text-based commands that it receives over network. A [Coherent Laser](https://www.coherent.com/) is connected to the Raspberry Pi via a USB-to-Serial interface, enabling the Pi to send commands to the laser and monitor its status. An [Arduino board](https://www.arduino.cc/) is also connected to the Raspberry Pi via a USB-to-Serial as well as a GPIO interface, and is mainly responsible for real-time generation of waveforms that are used to modulate the laser via a Digital-to-Analog converter (DAC). Additionally, a camera can also be connected to the Arduino, which can synchronise the camera's shutter with the modulation of the laser.
 
 A diagram that illustrates this setup can be seen below. It was created using [draw.io](https://www.draw.io/), and the source can be downloaded [here](./resources/flowcharts/project_map.xml).
 
@@ -49,19 +49,19 @@ A diagram that illustrates this setup can be seen below. It was created using [d
 
 ### Key Features
 
-The most noteworthy and desirable features of this project can be summarized as follows:
+The most noteworthy and desirable features of this project can be summarised as follows:
 
   - Remote control of laser over LAN
   - Remote monitoring of laser and safety interlock status over LAN
   - High-precision control of laser output intensity
-  - Modulation of laser beam with pre-set waveforms of customizable period length and inter-cycle delay:
+  - Modulation of laser beam with pre-set waveforms of customisable period length and inter-cycle delay:
     - Sine wave, triangle wave, sawtooth wave: cycle period between 1 millisecond and 1 second
     - Square wave, pulse wave: cycle period between 1 millisecond and 1 hour
-  - Synchronization of laser with connected camera:
+  - Synchronisation of laser with connected camera:
     - "gated mode": laser is turned on only when camera is exposing
-    - "master mode": camera exposure triggered when laser intensity reaches a customizable threshold
+    - "master mode": camera exposure triggered when laser intensity reaches a customisable threshold
   - Robust and extensible error handling
-  - Modular, well-documented code for easy customization
+  - Modular, well-documented code for easy customisation
 
 
 ## The Hardware
@@ -71,7 +71,7 @@ The following section documents the steps required to correctly set up the hardw
 ### Raspberry Pi
 
 The Raspberry Pi used in this project is the [Raspberry Pi 3 B+](https://www.raspberrypi.org/products/raspberry-pi-3-model-b-plus/) (upgraded from the Raspberry Pi B Rev 2.0 on which development took place), chosen due to the following features:
-  - 1.4GHz processor (upgraded from 700Mhz)
+  - 1.4GHz processor (upgraded from 700MHz)
   - 1GB SDRAM (upgraded from 512MB)
   - 40 GPIO pins (upgraded from 26)
   - Gigabit Ethernet
@@ -115,7 +115,7 @@ The settings that will need be changed are:
     - **I2C**: disable the I2C interface and automatic loading of the I2C kernel module as we are not using it
     - **1-Wire** : disable the 1-Wire interface as we are not using it
 
-If the device will only communicate over Ethernet, then we can disable Wi-Fi and Bluetooth by adding the following lines to `/boot/config.txt`:
+If the device will only communicate over Ethernet, then we can disable WiFi and Bluetooth by adding the following lines to `/boot/config.txt`:
 
 ```shell
 dtoverlay=pi3-disable-wifi
@@ -399,7 +399,7 @@ The Arduino has 14 digital IO pins, marked as 0 to 13 in purple on the diagram b
 
 ![Arduino Digital IO Pins](./resources/images/readme/arduino_digital.jpg)
 
-The assignment of these digital pins is summarized as follows:
+The assignment of these digital pins is summarised as follows:
 
 | Pin Number |        Assignment       | Input/Output/PWM |                              Description                              |
 |:----------:|:------------------------:|:----------------:|:---------------------------------------------------------------------:|
@@ -464,11 +464,11 @@ A green "power" LED as well as an RGB "status" LED is used to signal different e
 
 #### Wiring Diagram
 
-This section describes the required wiring between all the components and the Arduino, using photographs of the setup accompanied by a schematic diagram. The wiring of the entire system, [stuff here!!!!], can be seen in the image below, followed by a full schematic.
+This section describes the required wiring between all the components and the Arduino, using photographs of the setup accompanied by a schematic diagram. The wiring of the entire system, including the DAC, safety gate, interlock and switch terminals, remote reset transistor, indicator LEDs, warning piezo buzzer, and camera communication connections, can be seen in the image below, followed by a full schematic.
 
 ![Full_Schematic_Image](resources/images/schematics/top1.jpg)
 
-Stuff here
+The schematic below was created using [Fritzing](www.fritzing.org). The Fritzing source file is also available [here](resources/schematics/full_schematic.fzz)
 
 ![Full_Schematic](resources/images/schematics/full_schematic.png)
 
@@ -480,7 +480,7 @@ Paste diagram and pictures. Expain diagram. Probably split it into sections
 
 The digital-to-analog converter (DAC) used in the project is the 12-bit [MCP4725](https://cdn-shop.adafruit.com/datasheets/mcp4725.pdf) on an [Adafruit breakout board](https://www.adafruit.com/product/935). A useful tutorial by Adafruit on how to use the DAC with both Arduino and Raspberry Pi can be found [here](https://learn.adafruit.com/mcp4725-12-bit-dac-tutorial).
 
-The DAC receives data from the Ardino using the I2C interface, where the DAC is the slave device and Arduino is the master. The DAC's `SCL` and `SDA` pins connect directly to Arduino's `SCL [A5]` and `SDA [A4]` pins. The DAC receives 5V through its `VDD` pin, and can output any voltage between 0V and 5V with a 12-bit accuracy through its `VOUT` pin.
+The DAC receives data from the Arduino using the I2C interface, where the DAC is the slave device and Arduino is the master. The DAC's `SCL` and `SDA` pins connect directly to Arduino's `SCL [A5]` and `SDA [A4]` pins. The DAC receives 5V through its `VDD` pin, and can output any voltage between 0V and 5V with a 12-bit accuracy through its `VOUT` pin.
 
 #### Safety
 
@@ -561,7 +561,7 @@ The following data gives the exact limits applied to the selection of the period
 
 ### Camera
 
-The camera used in this project is the [Alled Vison Manta](https://www.alliedvision.com/fileadmin/content/documents/products/cameras/Manta/techman/Manta_TechMan.pdf
+The camera used in this project is the [Allied Vision Manta](https://www.alliedvision.com/fileadmin/content/documents/products/cameras/Manta/techman/Manta_TechMan.pdf
 ). It uses the Hirose HR10-10R-12PA(73) connector, for which we used the Hirose HR10A-10P-12S breakout cable. The pin numbering for the Hirose cable can be seen below:
 
 ![Hirose](resources/images/readme/hirose.PNG)
@@ -611,7 +611,7 @@ WantedBy=multi-user.target
 
 ### Parser
 
-#### Table of Recognized Commands
+#### Table of Recognised Commands
 
 ### Error handler
 
