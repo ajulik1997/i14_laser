@@ -468,13 +468,62 @@ This section describes the required wiring between all the components and the Ar
 
 ![Full_Schematic_Image](resources/images/schematics/top1.jpg)
 
-The schematic below was created using [Fritzing](www.fritzing.org). The Fritzing source file is also available [here](resources/schematics/full_schematic.fzz)
+The schematic below was created using [Fritzing](www.fritzing.org). The Fritzing source file is also available [here](resources/schematics/full_schematic.fzz). Anyone wishing to clean up this wiring and transfer it to a PCB should find the Fritzing schematic very useful.
 
 ![Full_Schematic](resources/images/schematics/full_schematic.png)
 
-Paste diagram and pictures. Expain diagram. Probably split it into sections
+Although care has taken to reserve different jumper colours for each "type" of connection, due to lack of sizes, some colours had to be reused. The general rule is that **long green** jumpers correspond to connections with Raspberry Pi GPIO pins, while **long orange** jumpers connect breadboard components to the Arduino, and the **long yellow** jumpers connect the Arduino to the camera. Additionally, **mid-sized grey and white** jumpers are connections between the Arduino's "analog out" pins and the breadboard. It should be noted that small jumpers with same colours have also been used for inter-breadboard connections. A more consistent colouring scheme has been used in the Fritzing schematic:
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+| Colour |        Meaning       |
+|:------:|:--------------------:|
+|  Black |        Ground        |
+|   Red  |       5V Power       |
+|  Brown |  0-5V Variable Power |
+|  Green |      3.3V Signal     |
+| Yellow |       5V Signal      |
+| Orange |     5V PWM Signal    |
+|  Pink  |      I2C Signal      |
+|  Blue  | 0-5V Signal to Laser |
+
+![Top2_Schematic_Image](resources/images/schematics/top2.jpg)
+
+We will begin by looking at the main breadboard. Starting from the left of the top half, the first component (rows 1-6) is the DAC, followed by an OR gate (rows 10-17), the safety interlock override switch terminals (rows 20-21) and the safety interlock monitor terminals (rows 22-23). The bottom half contains the Arduino remote reset transistor (rows 30-32), a green power LED, a status RGB LED (rows 45-48), followed by the camera communication connections (rows 52-55), and finally the warning piezo buzzer.
+
+![Left1_Schematic_Image](resources/images/schematics/left1.jpg)
+
+This close-up highlights the connections between the DAC and the safety gate. The `VOUT` pin is connected to the laser via a BNC cable, and provides it a modulation signal. The `SDA` and `SCL` pins connect to Arduino's analog pins (blue-red-yellow), and allow for I2C communication with the DAC. `GND` is connected to the ground, while `VDD` is connected to the output pin of the OR gate (yellow-red-orange-grey). The OR gate is connected to 5V and ground, and takes two input. Input `A` is signal from the safety interlock override switch, and input `B` is the signal from the safety interlock. Both signals are pulled down to ground with an appropriate resistor.
+
+It should be noted that some of the connections below are schematically correct but do not match the actual wiring, mainly due to inconsistencies between pinouts of different components.
+
+![Part1_Schematic](resources/images/schematics/s_part1.png)
+
+The image below is a close-up of the safety interlock (red curl) and override (yellow curl) terminals. They are connected to the OR gate via a short blue and green jumper, respectively
+
+![Mid1_Schematic_Image](resources/images/schematics/mid1.jpg)
+
+The interlock and override terminals are also connected to RPi GPIO pins (via orange-green), as well as Arduino's analog-out pins (via orange-orange-(orange)-red-yellow-grey).
+
+![Right1_Schematic_Image](resources/images/schematics/right1.jpg)
+
+The next view highlights the Arduino remote reset transistor, as well as the two signal LEDs. The emitter of the transistor is connected to the ground, while base is connected to one RPi GPIO trough a current-limiting resistor. The collector connected to the `RESET` pin on the Arduino. The green power LED is connected to one of Arduino's PWM pins and directly to ground, and will remain on while the Arduino is on. The RBG LED is connected in a similar fashion, but uses three PWM pins for the red, green and blue pins.
+
+![Bottom1_Schematic_Image](resources/images/schematics/bottom1.jpg)
+
+The image below shows the final close up, this time of the camera communication connections and the piezo buzzer. The buzzer is connected in the same fashion as the LEDs: one pin to Arduino's PWM and the other to ground (in no particular orientation). The camera communication wires are highlighted red, pink, metallic, and brown. The red and pink wires corresponds to camera synchronisation pins, allowing the camera shutter to synchronise with the modulation waveform of the laser. They are connected to Arduino's GPIO pins, and the input pin is also pulled down to ground with an appropriate resistor. The metallic and brown pins provide isolated power and ground to the camera, for synchronisation purposes. These are connected to 5V and ground, respectively.
+
+![Corner_Schematic_Image](resources/images/schematics/corner.jpg)
+
+Here is an alternate view showing all the signalling components as well as the camera communication connections.
+
+![Part2_Schematic](resources/images/schematics/s_part2.png)
+
+This final image shows all the connections leaving the Arduino. The two long yellow wires leaving the top of the Arduino (bottom of the image) connect to the camera. The orange wires on the same side lead to other components. These can be seen in more detail in the schematic, as well as in the table included in the sections above. The bottom of the Arduino has the "analog in" and "power" headers. The two white jumpers are used for I2C communication with the DAC, while the grey jumpers are used for other digital-through-analog connections. The green wire from the power header provides ground for the breadboard (-) rail, while the yellow provides 5V for the (+) rail. Finally, the grey jumper from the power rail connects the `RESET` pin to a transistor.
+
+![Ard_Schematic_Image](resources/images/schematics/ard.jpg)
+
+This is the schematic view of the image above. The colours are consistent with the system described above. Note that this is a rotated view of a part of the schematic.
+
+![Part3_Schematic](resources/images/schematics/s_part3.png)
 
 ### Digital to Analog Converter
 
